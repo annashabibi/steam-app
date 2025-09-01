@@ -9,9 +9,6 @@
                 <a href="{{ route('helms.create') }}" class="btn btn-primary py-2 px-3">
                     <i class="ti ti-plus me-2"></i> Add Helm Transaction
                 </a>
-                <button type="button" class="btn btn-danger py-2 px-3" data-bs-toggle="modal" data-bs-target="#modalDeleteAll">
-                    <i class="ti ti-trash me-2"></i> Delete All Transactions
-                </button>
 
                 {{-- Modal Delete All --}}
                 <div class="modal fade" id="modalDeleteAll" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalDeleteAllLabel" aria-hidden="true">

@@ -24,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
          Carbon::setLocale('id');
 
+
+        //  Configure the application to use HTTPS in production
          if (config('app.env') === 'production') {
             \URL::forceScheme('https');
         }
