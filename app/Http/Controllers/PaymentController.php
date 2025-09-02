@@ -34,7 +34,7 @@ class PaymentController extends Controller
 
         // Siapkan parameter Snap
         $params = [
-            'enabled_payments' => ['qris', 'gopay', 'shopeepay', 'bank_transfer'],
+            'enabled_payments' => ['qris', 'bank_transfer'],
             'transaction_details' => [
                 'order_id'     => $transaction->midtrans_order_id,
                 'gross_amount' => (int) $transaction->total,
