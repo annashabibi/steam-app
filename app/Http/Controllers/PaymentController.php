@@ -180,7 +180,7 @@ public function payHelm(HelmTransaction $helm_transaction): View
     $total = $helm_transaction->helmitems->sum('harga');
 
     $params = [
-        'enabled_payments' => ['qris', 'gopay', 'shopeepay', 'bank_transfer'],
+        'enabled_payments' => ['qris', 'bank_transfer'],
         'transaction_details' => [
             'order_id'     => $helm_transaction->midtrans_order_id,
             'gross_amount' => (int) $total,
