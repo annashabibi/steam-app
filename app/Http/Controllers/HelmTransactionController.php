@@ -52,8 +52,8 @@ class HelmTransactionController extends Controller
     // Tampilkan form tambah transaksi helm
     public function create()
     {
-        $karyawans = Karyawan::all();
-        return view('helms.create', compact('karyawans'));
+        $karyawans = Karyawan::where('aktif', true)->get();
+        return view('pengeluaran.create', compact('karyawans'));
     }
 
     // Simpan transaksi helm ke database
