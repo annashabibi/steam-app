@@ -5,7 +5,13 @@
     {{-- Required meta tags --}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplikasi POS Steam Gue Gbyuur Laravel 11">
+    <meta property="og:title" content="Guegbyuur"/>
+    <meta property="og:description" content="Application for Cashier"/>
+    <meta property="og:url" content="https://guegbyuur.up.railway.app"/>
+    <meta property="og:image" content="https://guegbyuur.up.railway.app/images/preview.png"/>
+    <meta property="og:type" content="website"/>
+    <meta name="author" content="Annas Habibi">
+    <meta name="description" content="Aplikasi POS Steam Gue Gbyuur">
     <meta name="author" content="Annas Habibi">
 
     {{-- Title --}}
