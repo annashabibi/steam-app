@@ -1,5 +1,4 @@
 <x-app-layout>
-    {{-- Page Title --}}
     <x-page-title>Payment</x-page-title>
 
     <div class="container mt-5">
@@ -12,13 +11,15 @@
                     <p><strong>Nama Motor:</strong> {{ $transaction->motor->nama_motor }}</p>
                     <hr class="mt-4">
                     <p><strong>Total Pembayaran:</strong> Rp{{ number_format($transaction->total, 0, ',', '.') }}</p>
-                    
+
                     {{-- Tampilkan QR Code GoPay --}}
                     @if(!empty($gopayQrUrl))
                         <div class="text-center mt-4">
                             <p><strong>Scan QR untuk bayar dengan GoPay:</strong></p>
                             <img src="{{ $gopayQrUrl }}" alt="GoPay QR Code" style="max-width:300px;">
                         </div>
+                    @else
+                        <div class="alert alert-warning">QR Code belum tersedia, silakan coba lagi.</div>
                     @endif
                 @endunless
 
@@ -36,7 +37,6 @@
                     </div>
                 @endif
 
-                {{-- Tombol kembali --}}
                 <div class="mt-3">
                     <a href="{{ route('transactions.index') }}" class="btn btn-secondary ms-2">Kembali</a>
                 </div>

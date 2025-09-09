@@ -19,61 +19,66 @@ class PaymentController extends Controller
     public function pay(Transaction $transaction): View
 {
     // Konfigurasi Midtrans
-    Config::$serverKey = config('midtrans.server_key');
+    Config::$serverKey    = config('midtrans.server_key');
     Config::$isProduction = config('midtrans.is_production');
-    Config::$isSanitized = config('midtrans.is_sanitized');
-    Config::$is3ds = config('midtrans.is_3ds');
+    Config::$isSanitized  = config('midtrans.is_sanitized');
+    Config::$is3ds        = config('midtrans.is_3ds');
 
-    if (
-        $transaction->midtrans_payment_type !== null &&
-        empty($transaction->midtrans_order_id)
-    ) {
+    if (empty($transaction->midtrans_order_id)) {
         abort(400, 'Order ID tidak valid');
     }
 
-    // Payload khusus untuk GoPay QR Code
-    $params = [
-        "payment_type" => "gopay",
-        "transaction_details" => [
-            "order_id"     => $transaction->midtrans_order_id,
-            "gross_amount" => (int) $transaction->total,
-        ],
-        "gopay" => [
-            "enable_callback" => true,
-            "callback_url" => route('transactions.index'),
-        ],
-        "item_details" => [[
-            "id"       => $transaction->id,
-            "price"    => (int) $transaction->total,
-            "quantity" => 1,
-            "name"     => "Cuci Motor - " . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
-        ]],
-        "customer_details" => [
-            "first_name" => "Customer",
-        ],
-    ];
+    $gopayQrUrl = null;
 
-    try {
-        $gopayCharge = CoreApi::charge($params);
+    // Hanya buat QR GoPay kalau belum ada dan status belum paid
+    if (strtolower($transaction->payment_status) !== 'paid' && empty($transaction->midtrans_qr_url)) {
+        $params = [
+            "payment_type" => "gopay",
+            "transaction_details" => [
+                "order_id"     => $transaction->midtrans_order_id,
+                "gross_amount" => (int) $transaction->total,
+            ],
+            "gopay" => [
+                "enable_callback" => true,
+                "callback_url"    => route('transactions.index'),
+            ],
+            "item_details" => [[
+                "id"       => $transaction->id,
+                "price"    => (int) $transaction->total,
+                "quantity" => 1,
+                "name"     => "Cuci Motor - " . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
+            ]],
+            "customer_details" => [
+                "first_name" => "Customer",
+            ],
+        ];
 
-        // QR Code dinamis ada di sini:
-        $gopayQrUrl = $gopayCharge->actions[0]->url ?? null;
+        try {
+            $gopayCharge = CoreApi::charge($params);
 
-        // Simpan ke database kalau perlu
-        $transaction->update([
-            'midtrans_payment_type' => 'gopay',
-            'midtrans_qr_url' => $gopayQrUrl,
-        ]);
+            if (isset($gopayCharge['actions'][0]['url'])) {
+                $gopayQrUrl = $gopayCharge['actions'][0]['url'];
+            }
 
-    } catch (\Exception $e) {
-        Log::error('Midtrans GoPay Charge Error: ' . $e->getMessage());
-        abort(500, 'Midtrans Error: ' . $e->getMessage());
+            // Simpan QR URL dan payment type
+            $transaction->update([
+                'midtrans_payment_type' => 'gopay',
+                'midtrans_qr_url'       => $gopayQrUrl,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Midtrans GoPay Charge Error: ' . $e->getMessage());
+            abort(500, 'Midtrans Error: ' . $e->getMessage());
+        }
+    } else {
+        // Jika sudah ada QR
+        $gopayQrUrl = $transaction->midtrans_qr_url;
     }
 
     $isPaid = strtolower($transaction->payment_status) === 'paid';
 
     return view('payments.pay', compact('transaction', 'gopayQrUrl', 'isPaid'));
 }
+
 
     public function webhook(Request $request)
 {
