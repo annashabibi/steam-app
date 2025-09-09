@@ -16,68 +16,51 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     // Halaman pembayaran Midtrans
-    public function pay(Transaction $transaction): View
+    public function pay(Transaction $transaction)
 {
-    // Konfigurasi Midtrans
-    Config::$serverKey    = config('midtrans.server_key');
+    Config::$serverKey = config('midtrans.server_key');
     Config::$isProduction = config('midtrans.is_production');
-    Config::$isSanitized  = config('midtrans.is_sanitized');
-    Config::$is3ds        = config('midtrans.is_3ds');
+    Config::$isSanitized = config('midtrans.is_sanitized');
+    Config::$is3ds = config('midtrans.is_3ds');
 
-    if (empty($transaction->midtrans_order_id)) {
-        abort(400, 'Order ID tidak valid');
-    }
-
-    $gopayQrUrl = null;
-
-    // Hanya buat QR GoPay kalau belum ada dan status belum paid
-    if (strtolower($transaction->payment_status) !== 'paid' && empty($transaction->midtrans_qr_url)) {
+    try {
         $params = [
             "payment_type" => "gopay",
             "transaction_details" => [
-                "order_id"     => $transaction->midtrans_order_id,
+                "order_id" => $transaction->midtrans_order_id,
                 "gross_amount" => (int) $transaction->total,
             ],
             "gopay" => [
                 "enable_callback" => true,
-                "callback_url"    => route('transactions.index'),
+                "callback_url" => route('transactions.index'),
             ],
             "item_details" => [[
-                "id"       => $transaction->id,
-                "price"    => (int) $transaction->total,
+                "id" => $transaction->id,
+                "price" => (int) $transaction->total,
                 "quantity" => 1,
-                "name"     => "Cuci Motor - " . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
+                "name" => "Cuci Motor - " . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
             ]],
-            "customer_details" => [
-                "first_name" => "Customer",
-            ],
+            "customer_details" => ["first_name" => "Customer"],
         ];
 
-        try {
-            $gopayCharge = CoreApi::charge($params);
+        $charge = CoreApi::charge($params);
+        $gopayQrUrl = $charge->actions[0]->url ?? null;
 
-            if (isset($gopayCharge['actions'][0]['url'])) {
-                $gopayQrUrl = $gopayCharge['actions'][0]['url'];
-            }
+        $transaction->update([
+            'midtrans_payment_type' => 'gopay',
+            'midtrans_qr_url' => $gopayQrUrl,
+        ]);
 
-            // Simpan QR URL dan payment type
-            $transaction->update([
-                'midtrans_payment_type' => 'gopay',
-                'midtrans_qr_url'       => $gopayQrUrl,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Midtrans GoPay Charge Error: ' . $e->getMessage());
-            abort(500, 'Midtrans Error: ' . $e->getMessage());
-        }
-    } else {
-        // Jika sudah ada QR
-        $gopayQrUrl = $transaction->midtrans_qr_url;
+    } catch (\Exception $e) {
+        Log::error('Midtrans Error: ' . $e->getMessage());
+        abort(500, 'Midtrans Error: ' . $e->getMessage());
     }
 
     $isPaid = strtolower($transaction->payment_status) === 'paid';
 
     return view('payments.pay', compact('transaction', 'gopayQrUrl', 'isPaid'));
 }
+
 
 
     public function webhook(Request $request)
