@@ -7,6 +7,7 @@ use App\Models\HelmTransaction;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Midtrans\Snap;
+use Midtrans\CoreApi;
 use Midtrans\Config;
 use Midtrans\Notification;
 use Illuminate\Support\Facades\Log;
@@ -15,62 +16,57 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     // Halaman pembayaran Midtrans
-    public function pay(Transaction $transaction): View
-    {
-        // Konfigurasi Midtrans
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized = config('midtrans.is_sanitized');
-        Config::$is3ds = config('midtrans.is_3ds');
+    public function pay(Transaction $transaction)
+{
+    // Konfigurasi Midtrans
+    Config::$serverKey   = config('midtrans.server_key');
+    Config::$isProduction = config('midtrans.is_production'); // false kalau sandbox
+    Config::$isSanitized = true;
 
-        // Pastikan midtrans_order_id tidak kosong dan unik
-        if (
-            $transaction->midtrans_payment_type !== null &&
-            empty($transaction->midtrans_order_id)
-        ) {
-            abort(400, 'Order ID tidak valid');
-        }
-        
-
-        // Siapkan parameter Snap
-        $params = [
-            'enabled_payments' => ['qris', 'gopay', 'shopeepay', 'bank_transfer'],
-            'transaction_details' => [
-                'order_id'     => $transaction->midtrans_order_id,
-                'gross_amount' => (int) $transaction->total,
-            ],
-            'item_details' => [[
-                'id'       => $transaction->id,
-                'price'    => (int) $transaction->total,
-                'quantity' => 1,
-                'name'     => 'Cuci Motor - ' . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
-            ]],
-
-            'callbacks' => [
-              'finish' => route('transactions.index'), 
-            ],
-            'customer_details' => [
-                'first_name' => 'Customer',
-            ],
-        ];
-
-        if (!$transaction->midtrans_snap_token) {
-            try {
-                $snapToken = Snap::getSnapToken($params);
-                // Simpan ke database
-                $transaction->update(['midtrans_snap_token' => $snapToken]);
-            } catch (\Exception $e) {
-                Log::error('Midtrans Snap Token Error: ' . $e->getMessage());
-                abort(500, 'Midtrans Error: ' . $e->getMessage());
-            }
-        } else {
-            $snapToken = $transaction->midtrans_snap_token;
-        }
-
-        $isPaid = strtolower($transaction->payment_status) === 'paid';
-
-    return view('payments.pay', compact('transaction', 'snapToken', 'isPaid'));
+    if (empty($transaction->midtrans_order_id)) {
+        abort(400, 'Order ID tidak valid.');
     }
+
+    $params = [
+        'payment_type' => 'gopay',
+        'transaction_details' => [
+            'order_id' => $transaction->midtrans_order_id,
+            'gross_amount' => (int) $transaction->total,
+        ],
+        'gopay' => [
+            'enable_callback' => false,
+        ],
+    ];
+
+    try {
+        $response = CoreApi::charge($params);
+
+        Log::info('Midtrans GoPay Response:', (array) $response);
+
+        // Ambil URL QR Code dari response
+        $qrUrl = null;
+        if (isset($response->actions)) {
+            foreach ($response->actions as $action) {
+                if ($action->name === 'generate-qr-code') {
+                    $qrUrl = $action->url;
+                    break;
+                }
+            }
+        }
+
+        if (!$qrUrl) {
+            return back()->with('error', 'Tidak bisa membuat QR Code GoPay.');
+        }
+
+        return view('payments.gopay', [
+            'transaction' => $transaction,
+            'qrUrl' => $qrUrl,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Midtrans Core API Error: ' . $e->getMessage());
+        return back()->with('error', 'Midtrans Error: ' . $e->getMessage());
+    }
+}
 
     public function webhook(Request $request)
 {
