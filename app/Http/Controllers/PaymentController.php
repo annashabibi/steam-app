@@ -18,51 +18,47 @@ class PaymentController extends Controller
     // Halaman pembayaran Midtrans
     public function pay(Transaction $transaction)
 {
-    Config::$serverKey = config('midtrans.server_key');
+    // Konfigurasi Midtrans
+    Config::$serverKey    = config('midtrans.server_key');
     Config::$isProduction = config('midtrans.is_production');
-    Config::$isSanitized = true;
-    Config::$is3ds = true;
+    Config::$isSanitized  = true;
+    Config::$is3ds        = true;
+
+    // Parameter transaksi
+    $params = [
+        'transaction_details' => [
+            'order_id'     => $transaction->id . '-' . time(),
+            'gross_amount' => $transaction->total,
+        ],
+        'customer_details' => [
+            'first_name' => $transaction->karyawan->nama ?? 'Customer',
+        ],
+        'enabled_payments' => ['gopay'],
+    ];
 
     try {
-        $params = [
-            "payment_type" => "gopay", // atau "qris" kalau QRIS
-            "transaction_details" => [
-                "order_id" => $transaction->midtrans_order_id,
-                "gross_amount" => (int) $transaction->total,
-            ],
-            "item_details" => [[
-                "id" => $transaction->id,
-                "price" => (int) $transaction->total,
-                "quantity" => 1,
-                "name" => "Cuci Motor - " . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
-            ]],
-            "customer_details" => [
-                "first_name" => $transaction->karyawan->nama_karyawan ?? "Customer",
-            ],
-        ];
-
+        // Charge menggunakan Core API
         $charge = CoreApi::charge($params);
 
-        // Untuk GoPay → ada actions[0].url berisi QR
+        // Ambil QR Code GoPay kalau ada
         $gopayQrUrl = $charge->actions[0]->url ?? null;
 
-        // Simpan ke DB
+        // Update data transaksi dasar saja (tidak simpan qr url)
         $transaction->update([
-            'midtrans_payment_type' => 'gopay',
+            'midtrans_payment_type'   => $charge->payment_type ?? 'gopay',
             'midtrans_transaction_id' => $charge->transaction_id ?? null,
-            'midtrans_qr_url' => $gopayQrUrl,
-            'payment_status' => 'pending',
+            'payment_status'          => $charge->transaction_status ?? 'pending',
         ]);
 
-        return view('payments.pay', compact('transaction', 'gopayQrUrl'));
-
+        // Kirim ke view
+        return view('payments.pay', [
+            'transaction' => $transaction,
+            'gopayQrUrl'  => $gopayQrUrl,
+        ]);
     } catch (\Exception $e) {
-        Log::error('Midtrans Core API Error: ' . $e->getMessage());
-        abort(500, 'Midtrans Error: ' . $e->getMessage());
+        return back()->withErrors(['error' => $e->getMessage()]);
     }
 }
-
-
 
 
     public function webhook(Request $request)
