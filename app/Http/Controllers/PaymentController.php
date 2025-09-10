@@ -20,19 +20,15 @@ class PaymentController extends Controller
 {
     Config::$serverKey = config('midtrans.server_key');
     Config::$isProduction = config('midtrans.is_production');
-    Config::$isSanitized = config('midtrans.is_sanitized');
-    Config::$is3ds = config('midtrans.is_3ds');
+    Config::$isSanitized = true;
+    Config::$is3ds = true;
 
     try {
         $params = [
-            "payment_type" => "gopay",
+            "payment_type" => "gopay", // atau "qris" kalau QRIS
             "transaction_details" => [
                 "order_id" => $transaction->midtrans_order_id,
                 "gross_amount" => (int) $transaction->total,
-            ],
-            "gopay" => [
-                "enable_callback" => true,
-                "callback_url" => route('transactions.index'),
             ],
             "item_details" => [[
                 "id" => $transaction->id,
@@ -40,24 +36,30 @@ class PaymentController extends Controller
                 "quantity" => 1,
                 "name" => "Cuci Motor - " . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
             ]],
-            "customer_details" => ["first_name" => "Customer"],
+            "customer_details" => [
+                "first_name" => $transaction->karyawan->nama_karyawan ?? "Customer",
+            ],
         ];
 
         $charge = CoreApi::charge($params);
+
+        // Untuk GoPay → ada actions[0].url berisi QR
         $gopayQrUrl = $charge->actions[0]->url ?? null;
 
+        // Simpan ke DB
         $transaction->update([
             'midtrans_payment_type' => 'gopay',
+            'midtrans_transaction_id' => $charge->transaction_id ?? null,
             'midtrans_qr_url' => $gopayQrUrl,
+            'payment_status' => 'pending',
         ]);
+
+        return view('payments.pay', compact('transaction', 'gopayQrUrl'));
+
     } catch (\Exception $e) {
-        Log::error('Midtrans Error: ' . $e->getMessage());
+        Log::error('Midtrans Core API Error: ' . $e->getMessage());
         abort(500, 'Midtrans Error: ' . $e->getMessage());
     }
-
-    $isPaid = strtolower($transaction->payment_status) === 'paid';
-
-    return view('payments.pay', compact('transaction', 'gopayQrUrl', 'isPaid'));
 }
 
 
