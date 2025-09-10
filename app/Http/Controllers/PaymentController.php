@@ -58,7 +58,7 @@ class PaymentController extends Controller
             return back()->with('error', 'Tidak bisa membuat QR Code GoPay.');
         }
 
-        return view('payments.gopay', [
+        return view('payments.pay', [
             'transaction' => $transaction,
             'qrUrl' => $qrUrl,
         ]);
