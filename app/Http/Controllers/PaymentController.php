@@ -50,7 +50,6 @@ class PaymentController extends Controller
             'midtrans_payment_type' => 'gopay',
             'midtrans_qr_url' => $gopayQrUrl,
         ]);
-
     } catch (\Exception $e) {
         Log::error('Midtrans Error: ' . $e->getMessage());
         abort(500, 'Midtrans Error: ' . $e->getMessage());
@@ -60,6 +59,7 @@ class PaymentController extends Controller
 
     return view('payments.pay', compact('transaction', 'gopayQrUrl', 'isPaid'));
 }
+
 
 
 
