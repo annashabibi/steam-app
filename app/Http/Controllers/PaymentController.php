@@ -20,7 +20,7 @@ class PaymentController extends Controller
 {
     // Konfigurasi Midtrans
     Config::$serverKey   = config('midtrans.server_key');
-    Config::$isProduction = config('midtrans.is_production', false); // false kalau sandbox
+    Config::$isProduction = config('midtrans.is_production'); // false kalau sandbox
     Config::$isSanitized = true;
 
     if (empty($transaction->midtrans_order_id)) {
