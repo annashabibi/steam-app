@@ -7,7 +7,6 @@ use App\Models\HelmTransaction;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Midtrans\Snap;
-use Midtrands\CoreApi;
 use Midtrans\Config;
 use Midtrans\Notification;
 use Illuminate\Support\Facades\Log;
@@ -16,96 +15,62 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     // Halaman pembayaran Midtrans
-    public function pay($id): View
-{
-    // Ambil transaction berdasarkan ID
-    $transaction = Transaction::findOrFail($id);
-    
-    // Konfigurasi Midtrans
-    Config::$serverKey = config('midtrans.server_key');
-    Config::$isProduction = config('midtrans.is_production', true);
-    Config::$isSanitized = config('midtrans.is_sanitized', true);
-    Config::$is3ds = config('midtrans.is_3ds', true);
+    public function pay(Transaction $transaction): View
+    {
+        // Konfigurasi Midtrans
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
 
-    // Order ID wajib ada
-    if (empty($transaction->midtrans_order_id)) {
-        abort(400, 'Order ID tidak valid');
-    }
-
-    $qrUrl = null;
-    $deeplinkUrl = null;
-    $errorMessage = null;
-
-    // Jika belum ada payment_url atau masih pending, buat request baru
-    if (empty($transaction->midtrans_payment_url) && $transaction->payment_status === 'pending') {
+        // Pastikan midtrans_order_id tidak kosong dan unik
+        if (
+            $transaction->midtrans_payment_type !== null &&
+            empty($transaction->midtrans_order_id)
+        ) {
+            abort(400, 'Order ID tidak valid');
+        }
         
-        // Payload Core API khusus GoPay
+
+        // Siapkan parameter Snap
         $params = [
-            'payment_type' => 'gopay',
+            'enabled_payments' => ['qris', 'gopay', 'shopeepay', 'bank_transfer'],
             'transaction_details' => [
-                'order_id' => $transaction->midtrans_order_id,
+                'order_id'     => $transaction->midtrans_order_id,
                 'gross_amount' => (int) $transaction->total,
             ],
-            'gopay' => [
-                'enable_callback' => true,
-                'callback_url' => route('transactions.index'),
-            ],
             'item_details' => [[
-                'id' => (string) $transaction->id,
-                'price' => (int) $transaction->total,
+                'id'       => $transaction->id,
+                'price'    => (int) $transaction->total,
                 'quantity' => 1,
-                'name' => 'Cuci Motor - ' . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
+                'name'     => 'Cuci Motor - ' . ($transaction->motor->nama_motor ?? 'Tanpa Nama'),
             ]],
+
+            'callbacks' => [
+              'finish' => route('transactions.index'), 
+            ],
             'customer_details' => [
                 'first_name' => 'Customer',
-            ]
+            ],
         ];
 
-        try {
-            $chargeResponse = CoreApi::charge($params);
-            
-            \Log::info('Midtrans Response:', (array) $chargeResponse);
-
-            // Cek status response
-            if (isset($chargeResponse->status_code) && $chargeResponse->status_code == '201') {
-                // Ambil QR & Deeplink dari response
-                if (isset($chargeResponse->actions) && is_array($chargeResponse->actions)) {
-                    foreach ($chargeResponse->actions as $action) {
-                        if ($action->name === 'generate-qr-code') {
-                            $qrUrl = $action->url;
-                        }
-                        if ($action->name === 'deeplink-redirect') {
-                            $deeplinkUrl = $action->url;
-                        }
-                    }
-                }
-
-                // Simpan ke DB
-                $transaction->update([
-                    'midtrans_payment_url' => $qrUrl,
-                    'midtrans_payment_type' => 'gopay',
-                    'midtrans_transaction_id' => $chargeResponse->transaction_id ?? null,
-                ]);
-
-            } else {
-                $errorMessage = 'Gagal membuat pembayaran: ' . ($chargeResponse->status_message ?? 'Unknown error');
-                \Log::error('Midtrans Error Response:', (array) $chargeResponse);
+        if (!$transaction->midtrans_snap_token) {
+            try {
+                $snapToken = Snap::getSnapToken($params);
+                // Simpan ke database
+                $transaction->update(['midtrans_snap_token' => $snapToken]);
+            } catch (\Exception $e) {
+                Log::error('Midtrans Snap Token Error: ' . $e->getMessage());
+                abort(500, 'Midtrans Error: ' . $e->getMessage());
             }
-
-        } catch (\Exception $e) {
-            $errorMessage = 'Midtrans Error: ' . $e->getMessage();
-            \Log::error('Midtrans Core API Exception: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+        } else {
+            $snapToken = $transaction->midtrans_snap_token;
         }
-    } else {
-        // Jika sudah ada payment_url, gunakan yang sudah ada
-        $qrUrl = $transaction->midtrans_payment_url;
+
+        $isPaid = strtolower($transaction->payment_status) === 'paid';
+
+    return view('payments.pay', compact('transaction', 'snapToken', 'isPaid'));
     }
-
-    $isPaid = strtolower($transaction->payment_status) === 'paid';
-
-    return view('payments.pay', compact('transaction', 'qrUrl', 'deeplinkUrl', 'isPaid', 'errorMessage'));
-}
 
     public function webhook(Request $request)
 {
