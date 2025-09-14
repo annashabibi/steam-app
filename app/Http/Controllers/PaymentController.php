@@ -64,6 +64,8 @@ class PaymentController extends Controller
         try {
             $chargeResponse = CoreApi::charge($params);
 
+            dd($chargeResponse);
+
             // Log response (convert ke JSON biar aman)
             \Log::info('Midtrans Response: ' . json_encode($chargeResponse));
 
