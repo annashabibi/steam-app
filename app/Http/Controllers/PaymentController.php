@@ -23,7 +23,7 @@ class PaymentController extends Controller
     
     // Konfigurasi Midtrans
     Config::$serverKey = config('midtrans.server_key');
-    Config::$isProduction = config('midtrans.is_production', false);
+    Config::$isProduction = config('midtrans.is_production', true);
     Config::$isSanitized = config('midtrans.is_sanitized', true);
     Config::$is3ds = config('midtrans.is_3ds', true);
 
