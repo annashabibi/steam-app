@@ -21,20 +21,20 @@ class PaymentController extends Controller
     {
         // Konfigurasi Midtrans
         Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production', false);
-        Config::$isSanitized = config('midtrans.is_sanitized', true);
-        Config::$is3ds = config('midtrans.is_3ds', true);
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
 
         if (empty($transaction->midtrans_order_id)) {
             abort(400, 'Order ID tidak valid');
         }
 
-        $qrUrl = $transaction->midtrans_payment_url;
+        $qrUrl = null;
         $deeplinkUrl = null;
         $errorMessage = null;
 
-        // Jika belum ada QR / masih pending, buat request baru ke Midtrans
-        if (empty($qrUrl) && $transaction->payment_status === 'pending') {
+        // Selalu request QR Midtrans jika masih pending
+        if ($transaction->payment_status === 'pending') {
             $params = [
                 'payment_type' => 'gopay',
                 'transaction_details' => [
@@ -69,17 +69,8 @@ class PaymentController extends Controller
                             $deeplinkUrl = $action->url ?? null;
                         }
                     }
-
-                    // Simpan URL QR ke DB
-                    $transaction->update([
-                        'midtrans_payment_url'    => $qrUrl,
-                        'midtrans_payment_type'   => 'gopay',
-                        'midtrans_transaction_id' => $chargeResponse->transaction_id ?? null,
-                    ]);
-
                 } else {
                     $errorMessage = 'Gagal membuat pembayaran: ' . ($chargeResponse->status_message ?? 'Unknown error');
-                    Log::error('Midtrans Error Response: ' . json_encode($chargeResponse));
                 }
 
             } catch (\Exception $e) {
