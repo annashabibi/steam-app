@@ -19,11 +19,18 @@
                         @if(!empty($qrBase64))
                             <p>Scan QR Code ini dengan aplikasi GoPay:</p>
                             <img src="{{ $qrBase64 }}" alt="GoPay QR Code" class="img-fluid" style="max-width:250px;">
+                        @elseif(!empty($qrUrl))
+                            <p>Scan QR Code ini dengan aplikasi GoPay:</p>
+                            <img src="{{ $qrUrl }}" alt="GoPay QR Code" class="img-fluid" style="max-width:250px;">
                         @endif
 
                         @if(!empty($deeplinkUrl))
                             <p class="mt-3">Atau langsung buka aplikasi GoPay:</p>
                             <a href="{{ $deeplinkUrl }}" class="btn btn-success">Bayar dengan GoPay</a>
+                        @endif
+
+                        @if(!empty($errorMessage))
+                            <div class="alert alert-danger mt-3">{{ $errorMessage }}</div>
                         @endif
                     </div>
                 @endunless
