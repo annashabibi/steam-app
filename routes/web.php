@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
     // Midtrans
     Route::get('/payments/{transaction}/pay', [PaymentController::class, 'pay'])->name('midtrans.pay');
     // Route::get('/transactions/{transaction}/pay', [PaymentController::class, 'pay'])->name('pay');
-    Route::get('/transactions/{id}/pay', [TransactionController::class, 'pay'])->name('pay');
+    Route::get('/payments/{id}/pay', [TransactionController::class, 'pay'])->name('pay');
 
     // Helm
     Route::resource('helms', HelmTransactionController::class);
