@@ -21,6 +21,7 @@ class PaymentController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
+        // Konfigurasi Midtrans
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = config('midtrans.is_sanitized');
@@ -34,6 +35,7 @@ class PaymentController extends Controller
         $deeplinkUrl = null;
         $errorMessage = null;
 
+        // Jika belum ada QR atau status pending
         if (empty($qrUrl) && $transaction->payment_status === 'pending') {
 
             $params = [
@@ -67,16 +69,18 @@ class PaymentController extends Controller
                             $midtransQrUrl = $action->url ?? null;
 
                             if ($midtransQrUrl) {
-                                // Fetch QR image
-                                $imageData = Http::get($midtransQrUrl)->body();
+                                // Buat temporary file
+                                $tempPath = sys_get_temp_dir() . '/transaction_'.$transaction->id.'.png';
+                                file_put_contents($tempPath, Http::get($midtransQrUrl)->body());
 
                                 // Upload ke Cloudinary
-                                $cloudinaryResult = Cloudinary::upload($imageData, [
+                                $cloudinaryResult = Cloudinary::upload($tempPath, [
                                     'folder' => 'midtrans_qr',
                                     'public_id' => 'transaction_'.$transaction->id,
                                 ]);
 
-                                $qrUrl = $cloudinaryResult->getSecurePath(); // URL public Cloudinary
+                                unlink($tempPath); // hapus temporary file
+                                $qrUrl = $cloudinaryResult->getSecurePath();
                             }
                         }
                         if (($action->name ?? '') === 'deeplink-redirect') {
@@ -84,6 +88,7 @@ class PaymentController extends Controller
                         }
                     }
 
+                    // Simpan URL QR ke DB
                     $transaction->update([
                         'midtrans_payment_url'    => $qrUrl,
                         'midtrans_payment_type'   => 'gopay',
@@ -96,8 +101,8 @@ class PaymentController extends Controller
                 }
 
             } catch (\Exception $e) {
-                $errorMessage = 'Midtrans Error: ' . $e->getMessage();
-                Log::error('Midtrans Core API Exception: ' . $e->getMessage());
+                $errorMessage = 'Midtrans / Cloudinary Error: ' . $e->getMessage();
+                Log::error('Payment Exception: '.$e->getMessage());
             }
         }
 
@@ -111,8 +116,6 @@ class PaymentController extends Controller
             'errorMessage'
         ));
     }
-
-
 
     public function webhook(Request $request)
 {
