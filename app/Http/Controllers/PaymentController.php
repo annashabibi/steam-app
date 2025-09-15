@@ -9,7 +9,7 @@ use Illuminate\View\View;
 use Midtrans\Snap;
 use Midtrans\CoreApi;
 use Midtrans\Config;
-use Midtrans\Notification;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -19,16 +19,13 @@ class PaymentController extends Controller
     // Halaman pembayaran Midtrans
     public function pay($id): View
     {
-        // Ambil transaction berdasarkan ID
         $transaction = Transaction::findOrFail($id);
 
-        // Konfigurasi Midtrans
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = config('midtrans.is_sanitized');
         Config::$is3ds = config('midtrans.is_3ds');
 
-        // Order ID wajib ada
         if (empty($transaction->midtrans_order_id)) {
             abort(400, 'Order ID tidak valid');
         }
@@ -37,7 +34,6 @@ class PaymentController extends Controller
         $deeplinkUrl = null;
         $errorMessage = null;
 
-        // Jika payment_url belum ada dan status masih pending
         if (empty($qrUrl) && $transaction->payment_status === 'pending') {
 
             $params = [
@@ -63,22 +59,31 @@ class PaymentController extends Controller
 
             try {
                 $chargeResponse = CoreApi::charge($params);
-
                 Log::info('Midtrans Response: ' . json_encode($chargeResponse));
 
                 if (isset($chargeResponse->status_code) && $chargeResponse->status_code == '201') {
-                    if (!empty($chargeResponse->actions) && is_array($chargeResponse->actions)) {
-                        foreach ($chargeResponse->actions as $action) {
-                            if (($action->name ?? '') === 'generate-qr-code') {
-                                $qrUrl = $action->url ?? null;
+                    foreach ($chargeResponse->actions as $action) {
+                        if (($action->name ?? '') === 'generate-qr-code') {
+                            $midtransQrUrl = $action->url ?? null;
+
+                            if ($midtransQrUrl) {
+                                // Fetch QR image
+                                $imageData = Http::get($midtransQrUrl)->body();
+
+                                // Upload ke Cloudinary
+                                $cloudinaryResult = Cloudinary::upload($imageData, [
+                                    'folder' => 'midtrans_qr',
+                                    'public_id' => 'transaction_'.$transaction->id,
+                                ]);
+
+                                $qrUrl = $cloudinaryResult->getSecurePath(); // URL public Cloudinary
                             }
-                            if (($action->name ?? '') === 'deeplink-redirect') {
-                                $deeplinkUrl = $action->url ?? null;
-                            }
+                        }
+                        if (($action->name ?? '') === 'deeplink-redirect') {
+                            $deeplinkUrl = $action->url ?? null;
                         }
                     }
 
-                    // Simpan payment URL ke DB
                     $transaction->update([
                         'midtrans_payment_url'    => $qrUrl,
                         'midtrans_payment_type'   => 'gopay',
@@ -106,6 +111,7 @@ class PaymentController extends Controller
             'errorMessage'
         ));
     }
+
 
 
     public function webhook(Request $request)

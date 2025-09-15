@@ -22,6 +22,15 @@
                         @else
                             <p>QR Code belum tersedia, silakan coba lagi nanti.</p>
                         @endif
+
+                        @if(!empty($deeplinkUrl))
+                            <p class="mt-3">Atau langsung buka aplikasi GoPay:</p>
+                            <a href="{{ $deeplinkUrl }}" class="btn btn-success">Bayar dengan GoPay</a>
+                        @endif
+
+                        @if(!empty($errorMessage))
+                            <div class="alert alert-danger mt-3">{{ $errorMessage }}</div>
+                        @endif
                     </div>
                 @endunless
 
