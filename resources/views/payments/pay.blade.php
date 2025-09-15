@@ -13,9 +13,9 @@
                     <p><strong>Total Pembayaran:</strong> Rp{{ number_format($transaction->total, 0, ',', '.') }}</p>
 
                     <div class="text-center mt-4">
-                        @if(!empty($transaction->midtrans_payment_url))
+                        @if(!empty($qrUrl))
                             <p>Scan QR Code ini dengan aplikasi GoPay:</p>
-                            <img src="{{ $transaction->midtrans_payment_url }}" alt="GoPay QR" style="max-width:250px;">
+                            <img src="{{ $qrUrl }}" alt="GoPay QR" class="img-fluid" style="max-width:250px;">
                         @else
                             <p>QR Code belum tersedia, silakan coba lagi nanti.</p>
                         @endif
@@ -33,7 +33,7 @@
 
                 @if($isPaid)
                     <div class="alert alert-success mt-2">
-                        <p><strong>Pembayaran sudah lunas.</strong></p>
+                        <p><strong>Pembayaran sudah lunas ✅</strong></p>
                         <p><strong>Metode Pembayaran:</strong> {{ ucfirst($transaction->midtrans_payment_type ?? 'N/A') }}</p>
                         <p><strong>ID Transaksi:</strong> {{ $transaction->midtrans_transaction_id ?? '-' }}</p>
                         <p><strong>Status:</strong> {{ ucfirst($transaction->payment_status) }}</p>
