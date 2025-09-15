@@ -10,6 +10,7 @@ use Midtrans\Snap;
 use Midtrans\CoreApi;
 use Midtrans\Config;
 use Midtrans\Notification;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 
@@ -70,22 +71,33 @@ class PaymentController extends Controller
             if (isset($chargeResponse->status_code) && $chargeResponse->status_code == '201') {
                 // Ambil QR & Deeplink dari response
                 if (!empty($chargeResponse->actions) && is_array($chargeResponse->actions)) {
-                    foreach ($chargeResponse->actions as $action) {
-                        if (($action->name ?? '') === 'generate-qr-code') {
-                            $qrUrl = $action->url ?? null;
-                        }
-                        if (($action->name ?? '') === 'deeplink-redirect') {
-                            $deeplinkUrl = $action->url ?? null;
+                foreach ($chargeResponse->actions as $action) {
+                    if (($action->name ?? '') === 'generate-qr-code') {
+                        $qrUrl = $action->url ?? null;
+
+                        // Fetch QR image & convert ke base64
+                        if ($qrUrl) {
+                            try {
+                                $imageData = Http::get($qrUrl)->body();
+                                $qrBase64 = 'data:image/png;base64,' . base64_encode($imageData);
+                            } catch (\Exception $e) {
+                                \Log::error('QR Fetch Error: ' . $e->getMessage());
+                                $qrBase64 = null;
+                            }
                         }
                     }
+                    if (($action->name ?? '') === 'deeplink-redirect') {
+                        $deeplinkUrl = $action->url ?? null;
+                    }
                 }
+            }
 
-                // Simpan ke DB
-                $transaction->update([
-                    'midtrans_payment_url'   => $qrUrl,
-                    'midtrans_payment_type'  => 'gopay',
-                    'midtrans_transaction_id'=> $chargeResponse->transaction_id ?? null,
-                ]);
+            // Simpan ke DB jika mau, tapi QR base64 biasanya hanya ditampilkan
+            $transaction->update([
+                'midtrans_payment_url'   => $qrBase64 ?? $qrUrl, 
+                'midtrans_payment_type'  => 'gopay',
+                'midtrans_transaction_id'=> $chargeResponse->transaction_id ?? null,
+            ]);
             } else {
                 $errorMessage = 'Gagal membuat pembayaran: ' . ($chargeResponse->status_message ?? 'Unknown error');
                 \Log::error('Midtrans Error Response: ' . json_encode($chargeResponse));
