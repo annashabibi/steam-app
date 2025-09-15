@@ -33,15 +33,13 @@ class PaymentController extends Controller
             abort(400, 'Order ID tidak valid');
         }
 
-        $qrUrl = null;
+        $qrUrl = $transaction->midtrans_payment_url;
         $deeplinkUrl = null;
-        $qrBase64 = null;
         $errorMessage = null;
 
-        // Jika belum ada payment_url atau masih pending, buat request baru
-        if (empty($transaction->midtrans_payment_url) && $transaction->payment_status === 'pending') {
-            
-            // Payload Core API khusus GoPay
+        // Jika payment_url belum ada dan status masih pending
+        if (empty($qrUrl) && $transaction->payment_status === 'pending') {
+
             $params = [
                 'payment_type' => 'gopay',
                 'transaction_details' => [
@@ -66,16 +64,13 @@ class PaymentController extends Controller
             try {
                 $chargeResponse = CoreApi::charge($params);
 
-                // Log response (convert ke JSON biar aman)
-                \Log::info('Midtrans Response: ' . json_encode($chargeResponse));
+                Log::info('Midtrans Response: ' . json_encode($chargeResponse));
 
                 if (isset($chargeResponse->status_code) && $chargeResponse->status_code == '201') {
-                    // Ambil QR & Deeplink dari response
                     if (!empty($chargeResponse->actions) && is_array($chargeResponse->actions)) {
                         foreach ($chargeResponse->actions as $action) {
                             if (($action->name ?? '') === 'generate-qr-code') {
                                 $qrUrl = $action->url ?? null;
-                                $qrBase64 = null; // Fallback: kita pakai URL langsung
                             }
                             if (($action->name ?? '') === 'deeplink-redirect') {
                                 $deeplinkUrl = $action->url ?? null;
@@ -83,38 +78,35 @@ class PaymentController extends Controller
                         }
                     }
 
-                    // Simpan ke DB
+                    // Simpan payment URL ke DB
                     $transaction->update([
                         'midtrans_payment_url'    => $qrUrl,
                         'midtrans_payment_type'   => 'gopay',
                         'midtrans_transaction_id' => $chargeResponse->transaction_id ?? null,
                     ]);
+
                 } else {
                     $errorMessage = 'Gagal membuat pembayaran: ' . ($chargeResponse->status_message ?? 'Unknown error');
-                    \Log::error('Midtrans Error Response: ' . json_encode($chargeResponse));
+                    Log::error('Midtrans Error Response: ' . json_encode($chargeResponse));
                 }
 
             } catch (\Exception $e) {
                 $errorMessage = 'Midtrans Error: ' . $e->getMessage();
-                \Log::error('Midtrans Core API Exception: ' . $e->getMessage());
-                \Log::info('Midtrans Payment URL: ' . ($transaction->midtrans_payment_url ?? 'NULL'));
+                Log::error('Midtrans Core API Exception: ' . $e->getMessage());
             }
-        } else {
-            // Jika sudah ada payment_url, gunakan yang sudah ada
-            $qrUrl = $transaction->midtrans_payment_url;
         }
 
         $isPaid = strtolower($transaction->payment_status) === 'paid';
 
         return view('payments.pay', compact(
-            'transaction', 
-            'qrUrl', 
-            'deeplinkUrl', 
-            'qrBase64', 
-            'isPaid', 
+            'transaction',
+            'qrUrl',
+            'deeplinkUrl',
+            'isPaid',
             'errorMessage'
         ));
     }
+
 
     public function webhook(Request $request)
 {
