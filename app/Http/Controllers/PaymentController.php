@@ -39,7 +39,7 @@ class PaymentController extends Controller
     // Jika belum ada payment_url atau masih pending, buat request baru
     if (empty($transaction->midtrans_payment_url) && $transaction->payment_status === 'pending') {
         
-        // Payload Core API khusus GoPay
+        // Payload Core API khusus GoPay dengan perbaikan untuk Railway
         $params = [
             'payment_type' => 'gopay',
             'transaction_details' => [
@@ -49,6 +49,8 @@ class PaymentController extends Controller
             'gopay' => [
                 'enable_callback' => true,
                 'callback_url' => route('transactions.index'),
+                // Tambahan untuk Railway: force QR code generation
+                'account_id' => config('midtrans.gopay_partner_id', ''), // jika ada
             ],
             'item_details' => [[
                 'id' => (string) $transaction->id,
@@ -62,21 +64,53 @@ class PaymentController extends Controller
         ];
 
         try {
+            // Set timeout lebih tinggi untuk Railway
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 60, // 60 detik timeout
+                    'ignore_errors' => true,
+                ],
+            ]);
+
             $chargeResponse = CoreApi::charge($params);
 
-            // Log response (convert ke JSON biar aman)
-            \Log::info('Midtrans Response: ' . json_encode($chargeResponse));
+            // Log response untuk debugging
+            \Log::info('Midtrans Full Response: ' . json_encode($chargeResponse, JSON_PRETTY_PRINT));
 
             if (isset($chargeResponse->status_code) && $chargeResponse->status_code == '201') {
+                // Debug: Log seluruh struktur actions
+                if (!empty($chargeResponse->actions)) {
+                    \Log::info('Actions found: ' . json_encode($chargeResponse->actions));
+                }
+
                 // Ambil QR & Deeplink dari response
                 if (!empty($chargeResponse->actions) && is_array($chargeResponse->actions)) {
                     foreach ($chargeResponse->actions as $action) {
+                        \Log::info('Processing action: ' . json_encode($action));
+                        
                         if (($action->name ?? '') === 'generate-qr-code') {
                             $qrUrl = $action->url ?? null;
+                            \Log::info('QR URL found: ' . $qrUrl);
                         }
                         if (($action->name ?? '') === 'deeplink-redirect') {
                             $deeplinkUrl = $action->url ?? null;
+                            \Log::info('Deeplink found: ' . $deeplinkUrl);
                         }
+                    }
+                }
+
+                // Fallback: Cek struktur response alternatif
+                if (empty($qrUrl)) {
+                    // Kadang QR code ada di field lain
+                    if (!empty($chargeResponse->qr_string)) {
+                        $qrUrl = $chargeResponse->qr_string;
+                        \Log::info('QR found in qr_string: ' . $qrUrl);
+                    }
+                    
+                    // Atau bisa jadi ada di gopay object
+                    if (!empty($chargeResponse->gopay->qr_string)) {
+                        $qrUrl = $chargeResponse->gopay->qr_string;
+                        \Log::info('QR found in gopay.qr_string: ' . $qrUrl);
                     }
                 }
 
@@ -86,6 +120,11 @@ class PaymentController extends Controller
                     'midtrans_payment_type'  => 'gopay',
                     'midtrans_transaction_id'=> $chargeResponse->transaction_id ?? null,
                 ]);
+
+                // Log hasil akhir
+                \Log::info("Final QR URL: " . ($qrUrl ?? 'NULL'));
+                \Log::info("Final Deeplink: " . ($deeplinkUrl ?? 'NULL'));
+
             } else {
                 $errorMessage = 'Gagal membuat pembayaran: ' . ($chargeResponse->status_message ?? 'Unknown error');
                 \Log::error('Midtrans Error Response: ' . json_encode($chargeResponse));
@@ -94,6 +133,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             $errorMessage = 'Midtrans Error: ' . $e->getMessage();
             \Log::error('Midtrans Core API Exception: ' . $e->getMessage());
+            \Log::error('Exception trace: ' . $e->getTraceAsString());
         }
     } else {
         // Jika sudah ada payment_url, gunakan yang sudah ada
@@ -101,6 +141,9 @@ class PaymentController extends Controller
     }
 
     $isPaid = strtolower($transaction->payment_status) === 'paid';
+
+    // Debug log untuk view
+    \Log::info("Sending to view - QR: " . ($qrUrl ?? 'NULL') . ", Deeplink: " . ($deeplinkUrl ?? 'NULL'));
 
     return view('payments.pay', compact('transaction', 'qrUrl', 'deeplinkUrl', 'isPaid', 'errorMessage'));
 }
