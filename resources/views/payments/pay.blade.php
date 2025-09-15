@@ -16,7 +16,8 @@
                     <div class="text-center mt-4">
                         @if(!empty($qrUrl))
                             <p>Scan QR Code ini dengan aplikasi GoPay:</p>
-                            <img id="gopay-qr" alt="GoPay QR Code" class="img-fluid" style="max-width:250px;">
+                            <img src="{{ route('transactions.qr', $transaction->id) }}" 
+                                 alt="GoPay QR Code" class="img-fluid" style="max-width:250px;">
                         @endif
 
                         @if(!empty($deeplinkUrl))
@@ -42,20 +43,4 @@
             </div>
         </div>
     </div>
-
-    {{-- JS load QR --}}
-    @if(!empty($qrUrl))
-        <script>
-            document.addEventListener("DOMContentLoaded", async () => {
-                try {
-                    const res = await fetch("{{ $qrUrl }}");
-                    const blob = await res.blob();
-                    const imgUrl = URL.createObjectURL(blob);
-                    document.getElementById("gopay-qr").src = imgUrl;
-                } catch (err) {
-                    console.error("Gagal load QR:", err);
-                }
-            });
-        </script>
-    @endif
 </x-app-layout>
