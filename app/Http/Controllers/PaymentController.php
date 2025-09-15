@@ -17,13 +17,11 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     // Halaman pembayaran Midtrans
-    public function pay($id): View
+    public function pay(Transaction $transaction): View
     {
-        $transaction = Transaction::findOrFail($id);
-
         // Konfigurasi Midtrans
         Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production');
+        Config::$isProduction = config('midtrans.is_production', false);
         Config::$isSanitized = config('midtrans.is_sanitized', true);
         Config::$is3ds = config('midtrans.is_3ds', true);
 
@@ -35,8 +33,8 @@ class PaymentController extends Controller
         $deeplinkUrl = null;
         $errorMessage = null;
 
+        // Jika belum ada QR / masih pending, buat request baru ke Midtrans
         if (empty($qrUrl) && $transaction->payment_status === 'pending') {
-
             $params = [
                 'payment_type' => 'gopay',
                 'transaction_details' => [
@@ -63,30 +61,13 @@ class PaymentController extends Controller
                 Log::info('Midtrans Response: ' . json_encode($chargeResponse));
 
                 if (isset($chargeResponse->status_code) && $chargeResponse->status_code == '201') {
-                    $midtransQrUrl = null;
-
                     foreach ($chargeResponse->actions as $action) {
                         if (($action->name ?? '') === 'generate-qr-code') {
-                            $midtransQrUrl = $action->url ?? null;
+                            $qrUrl = $action->url ?? null;
                         }
                         if (($action->name ?? '') === 'deeplink-redirect') {
                             $deeplinkUrl = $action->url ?? null;
                         }
-                    }
-
-                    if ($midtransQrUrl) {
-                        // Buat temporary file
-                        $tempPath = sys_get_temp_dir() . '/transaction_' . $transaction->id . '.png';
-                        file_put_contents($tempPath, Http::get($midtransQrUrl)->body());
-
-                        // Upload ke Cloudinary
-                        $cloudinaryResult = Cloudinary::upload($tempPath, [
-                            'folder' => 'midtrans_qr',
-                            'public_id' => 'transaction_' . $transaction->id,
-                        ]);
-
-                        unlink($tempPath); // hapus temporary file
-                        $qrUrl = $cloudinaryResult->getSecurePath(); // ambil URL publik
                     }
 
                     // Simpan URL QR ke DB
@@ -102,7 +83,7 @@ class PaymentController extends Controller
                 }
 
             } catch (\Exception $e) {
-                $errorMessage = 'Midtrans / Cloudinary Error: ' . $e->getMessage();
+                $errorMessage = 'Midtrans Error: ' . $e->getMessage();
                 Log::error('Payment Exception: ' . $e->getMessage());
             }
         }
