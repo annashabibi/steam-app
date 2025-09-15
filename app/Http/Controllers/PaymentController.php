@@ -6,7 +6,7 @@ use App\Models\Transaction;
 use App\Models\HelmTransaction;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-// use Midtrans\Snap;
+use Midtrans\Snap;
 use Midtrans\CoreApi;
 use Midtrans\Config;
 // use Midtrans\Notification;
@@ -104,6 +104,31 @@ class PaymentController extends Controller
 
     return view('payments.pay', compact('transaction', 'qrUrl', 'deeplinkUrl', 'isPaid', 'errorMessage'));
 }
+
+public function showQr($id)
+{
+    $transaction = Transaction::findOrFail($id);
+
+    if (empty($transaction->midtrans_payment_url)) {
+        abort(404, 'QR Code tidak tersedia');
+    }
+
+    try {
+        $response = \Illuminate\Support\Facades\Http::withBasicAuth(config('midtrans.server_key'), '')
+            ->get($transaction->midtrans_payment_url);
+
+        if ($response->successful()) {
+            return response($response->body(), 200)
+                ->header('Content-Type', 'image/png');
+        } else {
+            abort(500, 'Gagal mengambil QR dari Midtrans');
+        }
+    } catch (\Exception $e) {
+        \Log::error("QR Error: " . $e->getMessage());
+        abort(500, 'Error mengambil QR');
+    }
+}
+
 
     public function webhook(Request $request)
 {

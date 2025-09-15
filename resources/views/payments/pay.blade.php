@@ -18,7 +18,7 @@
                     <div class="text-center mt-4">
                         @if(!empty($qrUrl))
                             <p>Scan QR Code ini dengan aplikasi GoPay:</p>
-                            <img src="{{ $qrUrl }}" alt="GoPay QR Code" class="img-fluid" style="max-width:250px;">
+                            <img src="{{ route('transactions.qr', $transaction->id) }}" alt="GoPay QR Code" class="img-fluid" style="max-width:250px;">
                         @endif
 
                         @if(!empty($deeplinkUrl))
