@@ -29,6 +29,8 @@
                             <a href="{{ $deeplinkUrl }}" class="btn btn-success">Bayar dengan GoPay</a>
                         @endif
 
+                        <p>Debug URL: {{ $transaction->midtrans_payment_url ?? 'NULL' }}</p>
+
                         @if(!empty($errorMessage))
                             <div class="alert alert-danger mt-3">{{ $errorMessage }}</div>
                         @endif

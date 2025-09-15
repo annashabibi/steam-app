@@ -97,6 +97,7 @@ class PaymentController extends Controller
             } catch (\Exception $e) {
                 $errorMessage = 'Midtrans Error: ' . $e->getMessage();
                 \Log::error('Midtrans Core API Exception: ' . $e->getMessage());
+                \Log::info('Midtrans Payment URL: ' . ($transaction->midtrans_payment_url ?? 'NULL'));
             }
         } else {
             // Jika sudah ada payment_url, gunakan yang sudah ada
