@@ -31,7 +31,7 @@
                 {{-- Jika sudah dibayar --}}
                 @if($isPaid)
                     <div class="alert alert-success mt-2">
-                        <p><strong>Pembayaran sudah lunas ✅</strong></p>
+                        <p><strong>Pembayaran sudah lunas.</strong></p>
                         <p><strong>Metode Pembayaran:</strong> {{ ucfirst($transaction->midtrans_payment_type ?? 'N/A') }}</p>
                         <p><strong>ID Transaksi:</strong> {{ $transaction->midtrans_transaction_id ?? '-' }}</p>
                         <p><strong>Status:</strong> {{ ucfirst($transaction->payment_status) }}</p>
