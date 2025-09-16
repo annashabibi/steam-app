@@ -200,23 +200,19 @@ class TransactionController extends Controller
 }
 
 
-//     public function pay($id)
-// {
-//     $transaction = Transaction::with('karyawan', 'motor')->findOrFail($id);
+    public function pay($id)
+{
+    $transaction = Transaction::findOrFail($id);
 
-//     // Cek jika bukan midtrans, redirect ke show
-//     if ($transaction->payment_method !== 'midtrans') {
-//         return redirect()->route('transactions.show', $transaction->id);
-//     }
+    // kalau metode pembayaran Midtrans → lempar ke PaymentController
+    if ($transaction->payment_method === 'midtrans') {
+        return redirect()->route('payments.pay', $transaction->id);
+    }
 
-//     // Jika sudah lunas
-//     $isPaid = $transaction->payment_status === 'paid';
+    // kalau bukan Midtrans, tampilkan show biasa
+    return redirect()->route('transactions.show', $transaction->id);
+}
 
-//     // Ambil token yang sudah disimpan
-//     $snapToken = $transaction->midtrans_snap_token;
-
-//     return view('payments.pay', compact('transaction', 'snapToken', 'isPaid'));
-// }
 
     public function success()
 {
