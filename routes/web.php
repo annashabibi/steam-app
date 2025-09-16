@@ -36,7 +36,6 @@ Route::middleware('auth')->group(function () {
     // Transactions CRUD plus deleteAll
     Route::resource('transactions', TransactionController::class);
     Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
-    
     // Route::post('/transactions/deleteAll', [TransactionController::class, 'deleteAll'])->name('transactions.deleteAll');
 
     // Pengeluaran CRUD plus deleteAll
@@ -57,6 +56,7 @@ Route::middleware('auth')->group(function () {
 
     // Midtrans
     Route::get('/payments/{transaction}/pay', [PaymentController::class, 'pay'])->name('midtrans.pay');
+    // Route::get('/transactions/{transaction}/pay', [PaymentController::class, 'pay'])->name('pay');
     Route::get('/transactions/{id}/pay', [TransactionController::class, 'pay'])->name('pay');
 
     // Helm
