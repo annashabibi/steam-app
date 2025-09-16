@@ -20,8 +20,15 @@ class PaymentController extends Controller
 {
     // Ambil transaction berdasarkan ID
     $transaction = Transaction::findOrFail($id);
+    
+    // Konfigurasi Midtrans
+    Config::$serverKey = config('midtrans.server_key');
+    Config::$isProduction = config('midtrans.is_production');
+    Config::$isSanitized = config('midtrans.is_sanitized');
+    Config::$is3ds = config('midtrans.is_3ds');
 
-        if (empty($transaction->midtrans_order_id)) {
+    // Order ID wajib ada
+   if (empty($transaction->midtrans_order_id)) {
             abort(400, 'Order ID tidak valid');
         }
 
@@ -132,7 +139,6 @@ class PaymentController extends Controller
         
         return null;
     }
-
 
     public function webhook(Request $request)
 {

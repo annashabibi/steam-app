@@ -79,49 +79,76 @@ class TransactionController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse
-{
-    // Validasi form
-    $request->validate([
-        'date'           => 'required|date',
-        'karyawan'       => ['required',
-            Rule::exists('karyawans', 'id')->where(function ($query):void {
-                $query->where('aktif', true);
-            }),
-        ],
-        'motor'          => 'required|exists:motors,id',
-        'tip'            => 'nullable|numeric|min:0',
-        'total'          => 'required|numeric|min:0', // Pastikan total adalah angka
-        'payment_method' => 'required|in:cash,midtrans',
-    ]);
+    {
+        // Validasi form
+        $request->validate([
+            'date'           => 'required|date',
+            'karyawan'       => ['required',
+                Rule::exists('karyawans', 'id')->where(function ($query):void {
+                    $query->where('aktif', true);
+                }),
+            ],
+            'motor'          => 'required|exists:motors,id',
+            'tip'            => 'nullable|numeric|min:0',
+            'total'          => 'required|numeric|min:0',
+            'payment_method' => 'required|in:cash,midtrans',
+        ]);
 
-    // Bersihkan angka untuk tip dan total (hilangkan titik sebagai pemisah ribuan)
-    $tip = str_replace('.', '', $request->tip ?? 0);
-    $total = str_replace('.', '', $request->total);
+        // Bersihkan angka untuk tip dan total
+        $tip = str_replace('.', '', $request->tip ?? 0);
+        $total = str_replace('.', '', $request->total);
 
-    // dd($request->all());
+        // Buat data transaksi
+        $transaction = Transaction::create([
+            'date'            => $request->date,
+            'karyawan_id'     => $request->karyawan,
+            'motor_id'        => $request->motor,
+            'tip'             => $tip,
+            'total'           => $total,
+            'payment_method'  => $request->payment_method,
+            'payment_status'  => $request->payment_method === 'cash' ? 'paid' : 'pending',
+            'midtrans_order_id' => $request->payment_method === 'midtrans' ? 'ORDER-' . Str::uuid() : null,
+        ]);
 
-    // Buat data transaksi
-    $transaction = Transaction::create([
-        'date'            => $request->date,
-        'karyawan_id'     => $request->karyawan,
-        'motor_id'        => $request->motor,
-        'tip'             => $tip,
-        'total'           => $total,
-        'payment_method'  => $request->payment_method,
-        'payment_status'  => $request->payment_method === 'cash' ? 'paid' : 'pending',
-        // 'midtrans_payment_type' => null,
-        'midtrans_order_id' => $request->payment_method === 'midtrans' ? 'ORDER-' . Str::uuid() : null,
-    ]);
-
-    // Menangani payment_method 'cash' atau 'online'
-    if ($request->payment_method === 'cash') {
-        // Jika cash, langsung selesai
-        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil disimpan.');
-    } else {
-        // Jika online, lanjutkan ke Midtrans
-        return redirect()->route('midtrans.pay', $transaction->id);
+        // Menangani payment_method
+        if ($request->payment_method === 'cash') {
+            // Jika cash, langsung selesai
+            return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil disimpan.');
+        } else {
+            // Jika midtrans, lanjutkan ke PaymentController
+            return redirect()->route('midtrans.pay', $transaction->id);
+        }
     }
-}
+
+    /**
+     * Method pay TAMBAHAN - untuk route /transactions/{id}/pay
+     * Dipanggil saat user klik tombol "Bayar" dari daftar transaksi
+     */
+    public function pay($id): RedirectResponse
+    {
+        $transaction = Transaction::findOrFail($id);
+        
+        // Jika sudah paid, redirect dengan pesan
+        if ($transaction->payment_status === 'paid') {
+            return redirect()->route('transactions.index')
+                ->with('info', 'Transaksi ini sudah dibayar.');
+        }
+        
+        // Jika payment method cash tapi belum paid (edge case)
+        if ($transaction->payment_method === 'cash') {
+            return redirect()->route('transactions.index')
+                ->with('info', 'Transaksi ini menggunakan pembayaran cash.');
+        }
+        
+        // Jika payment method midtrans, redirect ke PaymentController
+        if ($transaction->payment_method === 'midtrans') {
+            return redirect()->route('midtrans.pay', $transaction->id);
+        }
+        
+        // Fallback
+        return redirect()->route('transactions.index')
+            ->with('error', 'Metode pembayaran tidak valid.');
+    }
     /**
      * Show the form for editing the specified resource.
      */
@@ -200,23 +227,23 @@ class TransactionController extends Controller
 }
 
 
-    public function pay($id)
-{
-    $transaction = Transaction::with('karyawan', 'motor')->findOrFail($id);
+//     public function pay($id)
+// {
+//     $transaction = Transaction::with('karyawan', 'motor')->findOrFail($id);
 
-    // Cek jika bukan midtrans, redirect ke show
-    if ($transaction->payment_method !== 'midtrans') {
-        return redirect()->route('transactions.show', $transaction->id);
-    }
+//     // Cek jika bukan midtrans, redirect ke show
+//     if ($transaction->payment_method !== 'midtrans') {
+//         return redirect()->route('transactions.show', $transaction->id);
+//     }
 
-    // Jika sudah lunas
-    $isPaid = $transaction->payment_status === 'paid';
+//     // Jika sudah lunas
+//     $isPaid = $transaction->payment_status === 'paid';
 
-    // Ambil token yang sudah disimpan
-    $snapToken = $transaction->midtrans_snap_token;
+//     // Ambil token yang sudah disimpan
+//     $snapToken = $transaction->midtrans_snap_token;
 
-    return view('payments.pay', compact('transaction', 'snapToken', 'isPaid'));
-}
+//     return view('payments.pay', compact('transaction', 'snapToken', 'isPaid'));
+// }
 
     public function success()
 {
