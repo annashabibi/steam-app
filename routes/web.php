@@ -54,10 +54,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/report/filter', [ReportController::class, 'filter'])->name('report.filter');
     Route::get('/report/print/{type}', [ReportController::class, 'print'])->name('report.print');
 
-   Route::prefix('payments')->name('payments.')->group(function () {
-    Route::get('{transaction}/pay', [PaymentController::class, 'pay'])->name('pay');
-    // Route::post('callback', [PaymentController::class, 'callback'])->name('callback');
-});
+    // Midtrans
+    Route::get('/payments/{transaction}/pay', [PaymentController::class, 'pay'])->name('midtrans.pay');
+    // Route::get('/transactions/{transaction}/pay', [PaymentController::class, 'pay'])->name('pay');
+    Route::get('/transactions/{id}/pay', [TransactionController::class, 'pay'])->name('pay');
 
     // Helm
     Route::resource('helms', HelmTransactionController::class);
