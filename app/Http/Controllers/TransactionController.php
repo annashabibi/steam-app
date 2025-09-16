@@ -209,13 +209,13 @@ class TransactionController extends Controller
         return redirect()->route('transactions.show', $transaction->id);
     }
 
-    // Jika sudah lunas
-    $isPaid = $transaction->payment_status === 'paid';
+    // Jika sudah lunas, langsung tampilkan status
+    if ($transaction->payment_status === 'paid') {
+        return view('payments.pay', compact('transaction'))->with('isPaid', true);
+    }
 
-    // Ambil token yang sudah disimpan
-    $snapToken = $transaction->midtrans_snap_token;
-
-    return view('payments.pay', compact('transaction', 'snapToken', 'isPaid'));
+    // Pindahkan logika pembayaran ke PaymentController
+    return redirect()->route('payment.pay', $transaction->id);
 }
 
     public function success()
