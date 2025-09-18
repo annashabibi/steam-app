@@ -92,7 +92,7 @@ class TransactionController extends Controller
         ],
         'motor'          => 'required|exists:motors,id',
         'tip'            => 'nullable|numeric|min:0',
-        'total'          => 'required|numeric|min:0', // Pastikan total adalah angka
+        'total'          => 'required|numeric|min:0',
         'payment_method' => 'required|in:cash,midtrans',
     ]);
 

@@ -138,10 +138,40 @@
                                         {!! QrCode::size(250)->generate($transaction->qr_url) !!}
                                         <p class="small text-muted mt-2">
                                             <div>
-                                            <div id="countdown" class="countdown-timer"></div>
-                                        </div>
+                                                <div id="countdown{{ $transaction->id }}"></div>
+                                            </div>
                                         </p>
                                     </div>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            let countdownEl = document.getElementById("countdown{{ $transaction->id }}");
+                                            let expiredTime = new Date("{{ $transaction->expiry_time }}").getTime();
+                                            if (countdownEl) {
+                                                let timer = setInterval(function () {
+                                                    let now = new Date().getTime();
+                                                    let distance = expiredTime - now;
+                                                    if (distance <= 0) {
+                                                        clearInterval(timer);
+                                                        countdownEl.innerHTML = "⏰ Waktu pembayaran sudah habis";
+                                                        countdownEl.classList.remove("countdown-red");
+                                                        countdownEl.classList.add("countdown-expired");
+                                                        let checkBtn = document.getElementById("checkStatusBtn{{ $transaction->id }}");
+                                                        if (checkBtn) {
+                                                            checkBtn.disabled = true;
+                                                            checkBtn.innerHTML = "Waktu Habis";
+                                                        }
+                                                        return;
+                                                    }
+                                                    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                                    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                                                    countdownEl.innerHTML = `⏱️ Sisa waktu: ${minutes}m ${seconds}s`;
+                                                    countdownEl.classList.add("countdown-red");
+                                                }, 1000);
+                                            }
+                                        });
+                                    </script>
+                                @endif
+                            @endif
 
                         {{-- Transaction Details --}}
                         <div class="row g-0">
@@ -276,43 +306,6 @@
 
     {{-- Script Print --}}
     <script>
-            document.addEventListener('DOMContentLoaded', function () {
-    let countdownEl = document.getElementById("countdown");
-    
-    @if($transaction->expiry_time)
-        let expiredTime = new Date("{{ $transaction->expiry_time }}").getTime();
-    @else
-        let expiredTime = new Date().getTime() + (15 * 60 * 1000);
-    @endif
-
-    if (countdownEl) {
-        let timer = setInterval(function () {
-            let now = new Date().getTime();
-            let distance = expiredTime - now;
-
-            if (distance <= 0) {
-                clearInterval(timer);
-                countdownEl.innerHTML = "⏰ Waktu pembayaran sudah habis";
-                countdownEl.classList.remove("countdown-red");
-                countdownEl.classList.add("countdown-expired");
-                
-                let checkBtn = document.getElementById("checkStatusBtn");
-                if (checkBtn) {
-                    checkBtn.disabled = true;
-                    checkBtn.innerHTML = "Waktu Habis";
-                }
-                return;
-            }
-
-            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            countdownEl.innerHTML = `⏱️ Sisa waktu: ${minutes}m ${seconds}s`;
-            countdownEl.classList.add("countdown-red"); // kasih warna merah
-        }, 1000);
-    }
-});
-
     function printTransaksi(id) {
     // Ambil konten yang akan dicetak
     let transaksiContent = document.getElementById('transaksiContent' + id);
