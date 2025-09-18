@@ -51,7 +51,7 @@ class PaymentController extends Controller
                     'first_name' => $transaction->karyawan->nama_karyawan ?? 'Customer',
                 ],
                 'gopay' => [
-                    'enable_callback' => false,
+                    'enable_callback' => true,
                 ],
             ];
 
