@@ -21,8 +21,13 @@ class Transaction extends Model
         'midtrans_order_id',
         'midtrans_transaction_id',
         'midtrans_payment_type',
-        'midtrans_snap_token'
+        'qr_url',
+        'expiry_time',
     ];
+
+    protected $casts = [
+    'date' => 'datetime',
+];
 
     /**
      * Get the motor that owns the transaction.

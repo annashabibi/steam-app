@@ -5,6 +5,41 @@ body {
     color: #697a8d !important;
 }
 
+@font-face {
+    font-family: 'Soopafre';
+    src: url('/fonts/soopafre.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.countdown-timer {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    .countdown-red {
+        color: red;
+    }
+    .countdown-expired {
+        color: gray;
+        font-weight: bold;
+    }
+
+.brand {
+    font-family: 'Soopafre', sans-serif;
+}
+
+.brand-logo-text {
+    font-family: 'Soopafre', sans-serif;
+    font-size: 60px;
+    color: #ffffff;
+    transition: all 0.3s ease;
+}
+
+.brand-logo-text:hover {
+    color: #FFD700;
+    text-shadow: 2px 2px 0 #FF4500, -2px 2px 0 #FF4500, 2px -2px 0 #FF4500, -2px -2px 0 #FF4500;
+}
+
 .navbar.navbar-menu {
     margin-top: 62px;
     z-index: 1000;

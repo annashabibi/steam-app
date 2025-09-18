@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Karyawan;
 use App\Models\Motor;
 use App\Models\Transaction;
+use Midtrans\CoreApi;
+use Midtrans\Config;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +27,7 @@ class TransactionController extends Controller
     // $today =  Carbon::parse('2025-08-14');
 
     // Base query
-    $query = Transaction::select('id', 'date', 'tip', 'total', 'payment_method', 'payment_status', 'midtrans_payment_type', 'karyawan_id', 'motor_id')
+    $query = Transaction::select('id', 'date', 'tip', 'total', 'payment_method', 'payment_status', 'qr_url', 'expiry_time', 'midtrans_payment_type', 'karyawan_id', 'motor_id')
         ->with([
             'karyawan:id,nama_karyawan',
             'motor:id,nama_motor,harga'
@@ -200,23 +202,55 @@ class TransactionController extends Controller
 }
 
 
-    public function pay($id)
-{
-    $transaction = Transaction::with('karyawan', 'motor')->findOrFail($id);
+   public function transaction($id)
+    {
+        $transaction = Transaction::with('karyawan', 'motor')->findOrFail($id);
 
-    // Cek jika bukan midtrans, redirect ke show
-    if ($transaction->payment_method !== 'midtrans') {
-        return redirect()->route('transactions.show', $transaction->id);
+        if ($transaction->payment_method !== 'midtrans') {
+            return redirect()->route('transactions.show', $transaction->id);
+        }
+
+        $isPaid = in_array($transaction->payment_status, ['paid', 'settlement', 'capture']);
+
+        // Kalau sudah ada qr_url & expiry_time, langsung pakai
+        if ($transaction->qr_url && $transaction->expiry_time) {
+            return view('payments.pay', [
+                'transaction' => $transaction,
+                'deeplink'    => $transaction->qr_url,
+                'time_qr'     => $transaction->expiry_time,
+                'isPaid'      => $isPaid,
+            ]);
+        }
+
+        // Konfigurasi Midtrans
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+
+        $params = [
+                'payment_type' => 'gopay',
+                'transaction_details' => [
+                    'order_id'     => $transaction->midtrans_order_id ?? 'ORDER-' . $transaction->id . '-' . time(),
+                    'gross_amount' => (int) $transaction->total,
+                ],
+            ];
+
+            $charge = CoreApi::charge($params);
+
+            $deeplink = collect($charge->actions)->firstWhere('name', 'deeplink-redirect')->url ?? null;
+            $time_qr  = $charge->expiry_time ?? now()->addMinutes(15)->toDateTimeString();
+
+            $transaction->update([
+                'midtrans_payment_type'   => 'gopay',
+                'midtrans_transaction_id' => $charge->transaction_id ?? null,
+                'payment_status'          => $charge->transaction_status ?? 'pending',
+                'qr_url'                  => $deeplink,
+                'expiry_time'             => $time_qr,
+            ]);
+
+
+        return view('payments.pay', compact('transaction', 'deeplink', 'time_qr', 'isPaid'));
     }
 
-    // Jika sudah lunas, langsung tampilkan status
-    if ($transaction->payment_status === 'paid') {
-        return view('payments.pay', compact('transaction'))->with('isPaid', true);
-    }
-
-    // Pindahkan logika pembayaran ke PaymentController
-    return redirect()->route('payment.pay', $transaction->id);
-}
 
     public function success()
 {
