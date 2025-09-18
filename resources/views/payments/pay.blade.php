@@ -1,6 +1,89 @@
 <x-app-layout>
     <x-page-title>Payment</x-page-title>
 
+    <style>
+        .countdown-timer {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 16px;
+            animation: softPulse 2s ease-in-out infinite;
+        }
+        
+        .countdown-expired {
+            background: #e2e8f0;
+            color: #64748b;
+            animation: none;
+        }
+        
+        @keyframes softPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .status-check-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 10px;
+        }
+        
+        .status-check-btn:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+        
+        .status-check-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .payment-instructions {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+        
+        .instruction-list {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+        }
+        
+        .instruction-list li {
+            margin-bottom: 4px;
+        }
+    </style>
+
     <div class="container mt-5">
         <h3>Pembayaran Transaksi</h3>
 

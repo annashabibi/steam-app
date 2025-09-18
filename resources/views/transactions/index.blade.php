@@ -142,34 +142,6 @@
                                             </div>
                                         </p>
                                     </div>
-                                    <script>
-                                        document.addEventListener('DOMContentLoaded', function () {
-                                            let countdownEl = document.getElementById("countdown{{ $transaction->id }}");
-                                            let expiredTime = new Date("{{ $transaction->expiry_time }}").getTime();
-                                            if (countdownEl) {
-                                                let timer = setInterval(function () {
-                                                    let now = new Date().getTime();
-                                                    let distance = expiredTime - now;
-                                                    if (distance <= 0) {
-                                                        clearInterval(timer);
-                                                        countdownEl.innerHTML = "⏰ Waktu pembayaran sudah habis";
-                                                        countdownEl.classList.remove("countdown-red");
-                                                        countdownEl.classList.add("countdown-expired");
-                                                        let checkBtn = document.getElementById("checkStatusBtn{{ $transaction->id }}");
-                                                        if (checkBtn) {
-                                                            checkBtn.disabled = true;
-                                                            checkBtn.innerHTML = "Waktu Habis";
-                                                        }
-                                                        return;
-                                                    }
-                                                    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                                    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                                                    countdownEl.innerHTML = `⏱️ Sisa waktu: ${minutes}m ${seconds}s`;
-                                                    countdownEl.classList.add("countdown-red");
-                                                }, 1000);
-                                            }
-                                        });
-                                    </script>
                                 @endif
                             @endif
 
@@ -304,8 +276,35 @@
         <div class="pagination-links">{{ $transactions->links() }}</div>
     </div>
 
-    {{-- Script Print --}}
-    <script>
+{{-- Script Print + Timer --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    let countdownEl = document.getElementById("countdown{{ $transaction->id }}");
+    let expiredTime = new Date("{{ $transaction->expiry_time }}").getTime();
+        if (countdownEl) {
+        let timer = setInterval(function () {
+        let now = new Date().getTime();
+        let distance = expiredTime - now;
+        if (distance <= 0) {
+        clearInterval(timer);
+        countdownEl.innerHTML = "⏰ Waktu pembayaran sudah habis";
+        countdownEl.classList.remove("countdown-red");
+        countdownEl.classList.add("countdown-expired");
+        let checkBtn = document.getElementById("checkStatusBtn{{ $transaction->id }}");
+            if (checkBtn) {
+                checkBtn.disabled = true;
+                checkBtn.innerHTML = "Waktu Habis";
+                }
+                return;
+            }
+                let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                countdownEl.innerHTML = `⏱️ Sisa waktu: ${minutes}m ${seconds}s`;
+                countdownEl.classList.add("countdown-red");
+                }, 1000);
+        }
+    });
+
     function printTransaksi(id) {
     // Ambil konten yang akan dicetak
     let transaksiContent = document.getElementById('transaksiContent' + id);
