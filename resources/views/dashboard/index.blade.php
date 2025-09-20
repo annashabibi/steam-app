@@ -14,7 +14,7 @@
                 </h4>
                 <p class="lead-dashboard mb-4">Selamat bekerja, jangan lupa tetap teliti dan semangat ya!</p>
                 <div class="d-grid gap-3 d-md-flex justify-content-md-start">
-                    <a href="{{ route('transaction')}}" class="btn btn-primary py-2 px-4">
+                    <a href="{{ route('transactions.index')}}" class="btn btn-primary py-2 px-4">
                         Lihat Transaksi <i class="ti ti-chevron-right align-middle ms-2"></i>
                     </a>
                 </div>
