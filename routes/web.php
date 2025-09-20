@@ -58,7 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/payments/{transaction}/pay', [PaymentController::class, 'pay'])->name('midtrans.pay');
     // Route::get('/transactions/{transaction}/pay', [PaymentController::class, 'pay'])->name('pay');
     Route::get('/transactions/{id}/transaction', [TransactionController::class, 'transaction'])->name('transaction');
-    Route::get('/payment/{transaction}/status', [PaymentController::class, 'checkStatus'])->name('payment.checkStatus');
+    Route::get('/payments/{transaction}/status', [PaymentController::class, 'checkStatus'])->name('payment.checkStatus');
     
 
     // Helm
