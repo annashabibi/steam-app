@@ -303,19 +303,88 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Global function print
 function printTransaksi(id) {
-    let transaksiContent = document.getElementById("transaksiContent" + id);
-    if (!transaksiContent) return;
-
-    let printWindow = window.open("", "_blank");
+    // Ambil konten yang akan dicetak
+    let transaksiContent = document.getElementById('transaksiContent' + id);
+    let printWindow = window.open('', '_blank');
+    
+    // Buat HTML untuk print dengan styling yang sesuai
     let printHTML = `
         <!DOCTYPE html>
-        <html lang="id">
+        <html>
         <head>
-            <meta charset="UTF-8">
             <title>Struk</title>
             <style>
-                body { font-family: Arial, sans-serif; margin:20px; }
-                .brand { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+                @font-face {
+                font-family: 'soopafre';
+                src: url("data:font/truetype;charset=utf-8;base64,{{ base64_encode(file_get_contents(public_path('fonts/soopafre.ttf'))) }}") format('truetype');
+                }
+
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px;
+                    line-height: 1.4;
+                    color: #333;
+                }
+
+                @page {
+                    margin: 5mm;
+                }
+                
+                .card-body { 
+                    text-align: center; 
+                    max-width: 400px; 
+                    margin: 0 auto;
+                    border: 1px solid #ddd;
+                    padding: 20px;
+                    border-radius: 8px;
+                }
+
+                .brand {
+                    font-family: 'Soopafre', sans-serif;
+                    font-size: 28px;
+                    font-weight: bold;
+                    margin-bottom: 4px;
+                }
+
+                .alert { 
+                    padding: 10px; 
+                    border-radius: 4px; 
+                    margin: 15px 0;
+                    font-weight: bold;
+                }
+                .alert-success { 
+                    background-color: #d4edda; 
+                    color: #155724; 
+                    border: 1px solid #c3e6cb;
+                }
+                .alert-warning { 
+                    background-color: #fff3cd; 
+                    color: #856404; 
+                    border: 1px solid #ffeaa7;
+                }
+                .alert-danger { 
+                    background-color: #f8d7da; 
+                    color: #721c24; 
+                    border: 1px solid #f5c6cb;
+                }
+
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse;
+                }
+                td { 
+                    padding: 8px 0; 
+                    border-bottom: 1px solid #eee;
+                }
+                .border-top td {
+                    border-top: 2px solid #333;
+                    font-weight: bold;
+                }
+                .text-primary { color: #0d6efd; }
+                .fw-bold { font-weight: bold; }
+                .fs-5 { font-size: 1.25rem; }
+                .text-muted { color: #6c757d; }
+                .small { font-size: 0.875rem; }
             </style>
         </head>
         <body>
@@ -323,10 +392,14 @@ function printTransaksi(id) {
         </body>
         </html>
     `;
+    
     printWindow.document.write(printHTML);
     printWindow.document.close();
-    printWindow.print();
-    printWindow.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 300);
 }
 </script>
 </x-app-layout>
