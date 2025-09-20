@@ -78,6 +78,34 @@ class PaymentController extends Controller
     return view('payments.pay', compact('transaction', 'deeplink', 'time_qr'));
 }
 
+    public function checkStatus(Transaction $transaction)
+{
+    // Ambil status terbaru dari database (webhook sudah update)
+    return response()->json([
+        'status' => $transaction->payment_status,
+        'total' => $transaction->total,
+        'message' => 'Status terbaru berhasil diambil'
+    ]);
+
+    // Optional: jika ingin real-time langsung ke Midtrans
+    /*
+    try {
+        $status = \Midtrans\Transaction::status($transaction->midtrans_order_id);
+        $transaction->update([
+            'payment_status' => $status->transaction_status
+        ]);
+
+        return response()->json([
+            'status' => $status->transaction_status,
+            'gross_amount' => $status->gross_amount,
+            'message' => 'Status berhasil diambil dari Midtrans'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+    */
+}
+
     public function webhook(Request $request)
 {
     $payload = $request->all();

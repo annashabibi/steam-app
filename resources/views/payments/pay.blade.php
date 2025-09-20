@@ -114,7 +114,7 @@
                                 
                                 {{-- Check Status Button --}}
                                 <button id="checkStatusBtn" class="status-check-btn" onclick="checkPaymentStatus()">
-                                    🔄 Cek Status Pembayaran
+                                    Cek Status Pembayaran
                                 </button>
                             </div>
                             
@@ -172,8 +172,57 @@
         });
 
         function checkPaymentStatus() {
-            // Bisa bikin fetch/ajax ke endpoint untuk cek status transaksi
-            alert("🔍 Fitur cek status pembayaran bisa ditambahkan ke sini.");
-        }
+    const checkBtn = document.getElementById("checkStatusBtn");
+    checkBtn.disabled = true;
+    checkBtn.innerHTML = `<span class="loading-spinner"></span> Memeriksa...`;
+
+    fetch("{{ route('payment.checkStatus', $transaction->id) }}")
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'settlement' || data.status === 'capture') {
+                Swal.fire({
+                icon: 'success',
+                title: 'Pembayaran Berhasil!',
+                text: `Total: Rp${data.total.toLocaleString('id-ID')}`,
+                timer: 2000,
+                showConfirmButton: false,
+                willClose: () => {
+                    window.location.href = "{{ route('transactions.index') }}";
+                }
+            });
+            } else if(data.status === 'pending') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Pembayaran Pending',
+                    text: 'Silakan selesaikan pembayaran.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = "Cek Status Pembayaran";
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Pembayaran Gagal',
+                    text: `Status: ${data.status}`,
+                    timer: 2500,
+                    showConfirmButton: true
+                });
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = "Cek Status Pembayaran";
+            }
+        })
+        .catch(err => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Gagal Cek Status',
+                text: 'Terjadi kesalahan. Silakan coba lagi.',
+                showConfirmButton: true
+            });
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = "Cek Status Pembayaran";
+            console.error(err);
+        });
+}
     </script>
 </x-app-layout>

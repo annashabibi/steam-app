@@ -82,6 +82,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {{-- Flatpickr JS --}}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    {{-- Flatpickr Indonesia --}}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
     <!-- Select2 JS -->
 	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- jQuery Mask Plugin -->

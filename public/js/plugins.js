@@ -6,10 +6,11 @@ $(document).ready(function () {
     });
 
     flatpickr(".datepicker", {
-        altInput: true,
-        altFormat: "F j, Y",
-        dateFormat: "Y-m-d",
-        disableMobile: "true"
+    altInput: true,
+    altFormat: "l, j F Y",
+    dateFormat: "Y-m-d",
+    disableMobile: "true",
+    locale: "id"         
     });
     /* Documentation : https://flatpickr.js.org/ */
     
