@@ -220,6 +220,6 @@ public function filter(Request $request):View
             'dataPerHari' => $dataPerHari,
         ])->setPaper('A4', 'portrait');
 
-        return $pdf->stream('laporan-gaji-' . $karyawan->nama_karyawan . '-' . now()->timestamp . '.pdf');
+        return $pdf->stream('laporan-gaji-' . $karyawan->nama_karyawan . '.pdf');
     }
 }
