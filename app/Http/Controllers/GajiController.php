@@ -43,7 +43,7 @@ public function filter(Request $request):View
     for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
         $tanggal = $date->toDateString();
 
-        // ✅ transaksi pakai whereDate biar aman
+        // transaction
         $transactions = Transaction::where('karyawan_id', $karyawan->id)
             ->whereDate('date', $tanggal)
             ->where('payment_status', 'paid')
@@ -146,23 +146,38 @@ public function filter(Request $request):View
     }
 
     public function printGaji($id)
-    {
-        $karyawan = Karyawan::where('aktif', true)->with(['transactions.motor', 'helmitems', 'pengeluaran'])
-            ->findOrFail($id);
+        {
+            $karyawan = Karyawan::where('aktif', true)->with(['transactions.motor', 'helmitems', 'pengeluaran'])
+                ->findOrFail($id);
 
-        $startDate = Carbon::now()->startOfMonth();
-        $endDate = Carbon::now()->endOfMonth();
+            $startDate = Carbon::now()->startOfMonth();
+            $endDate = Carbon::now()->endOfMonth();
 
-        $dataPerHari = [];
+            $dataPerHari = [];
 
-        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
             $tanggal = $date->toDateString();
 
-            $transactions = $karyawan->transactions->where('date', $tanggal)->where('payment_status', 'paid');
+            // transaction
+            $transactions = Transaction::where('karyawan_id', $karyawan->id)
+                ->whereDate('date', $tanggal)
+                ->where('payment_status', 'paid')
+                ->with('motor')
+                ->get();
+
+            // helm items
             $helmItems = $karyawan->helmitems->filter(function ($item) use ($tanggal) {
-                return optional($item->helmTransaction)->tanggal_cuci === $tanggal;
+                return optional($item->helmTransaction?->tanggal_cuci)
+                    ? Carbon::parse($item->helmTransaction->tanggal_cuci)->toDateString() === $tanggal
+                    : false;
             });
-            $pengeluaran = $karyawan->pengeluaran->where('date', $tanggal)->sum('jumlah');
+
+            // Pengeluaran
+            $pengeluaran = $karyawan->pengeluaran
+                ->filter(function ($item) use ($tanggal) {
+                    return \Carbon\Carbon::parse($item->date)->toDateString() === $tanggal;
+                })
+                ->sum('jumlah');
 
             $jumlahMotor = $transactions->count();
             $bonus = max(0, $jumlahMotor - 10) * 1000;
@@ -186,6 +201,7 @@ public function filter(Request $request):View
                     default => 0,
                 };
             }
+
 
             $pendapatan += $bonus;
 
