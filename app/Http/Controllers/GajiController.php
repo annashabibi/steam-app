@@ -159,11 +159,9 @@ public function filter(Request $request):View
             $tanggal = $date->toDateString();
 
             // transaction
-            $transactions = Transaction::where('karyawan_id', $karyawan->id)
-                ->whereDate('date', $tanggal)
-                ->where('payment_status', 'paid')
-                ->with('motor')
-                ->get();
+            $transactions = $karyawan->transactions
+            ->where('date', $tanggal)
+            ->where('payment_status', 'paid');
 
             // helm items
             $helmItems = $karyawan->helmitems->filter(function ($item) use ($tanggal) {
