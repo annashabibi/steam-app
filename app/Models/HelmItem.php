@@ -32,7 +32,11 @@ class HelmItem extends Model
     }
 
     public function transaction()
-{
-    return $this->belongsTo(HelmTransaction::class, 'helm_transaction_id');
-}
+    {
+        return $this->belongsTo(HelmTransaction::class, 'helm_transaction_id');
+    }
+
+    protected $casts = [
+    'date' => 'datetime',
+];
 }
