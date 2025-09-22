@@ -19,6 +19,7 @@ class GajiController extends Controller
     $karyawans = Karyawan::where('aktif', true)->get();
     return view('gaji.index', compact('karyawans'));
 }
+
 public function filter(Request $request):View
 {
     $request->validate([
@@ -37,14 +38,31 @@ public function filter(Request $request):View
 
     $dataPerHari = [];
 
+    $dataPerHari = [];
+
     for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
         $tanggal = $date->toDateString();
 
-        $transactions = $karyawan->transactions->where('date', $tanggal)->where('payment_status', 'paid');
+        // ✅ transaksi pakai whereDate biar aman
+        $transactions = Transaction::where('karyawan_id', $karyawan->id)
+            ->whereDate('date', $tanggal)
+            ->where('payment_status', 'paid')
+            ->with('motor')
+            ->get();
+
+        // helm items
         $helmItems = $karyawan->helmitems->filter(function ($item) use ($tanggal) {
-            return optional($item->helmTransaction)->tanggal_cuci === $tanggal;
+            return optional($item->helmTransaction?->tanggal_cuci)
+                ? Carbon::parse($item->helmTransaction->tanggal_cuci)->toDateString() === $tanggal
+                : false;
         });
-        $pengeluaran = $karyawan->pengeluaran->where('date', $tanggal)->sum('jumlah');
+
+        // Pengeluaran
+        $pengeluaran = $karyawan->pengeluaran
+            ->filter(function ($item) use ($tanggal) {
+                return \Carbon\Carbon::parse($item->date)->toDateString() === $tanggal;
+            })
+            ->sum('jumlah');
 
         $jumlahMotor = $transactions->count();
         $bonus = max(0, $jumlahMotor - 10) * 1000;
