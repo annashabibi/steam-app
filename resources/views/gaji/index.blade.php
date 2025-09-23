@@ -46,7 +46,7 @@
             <i class="ti ti-user fs-5 me-2"></i> Menampilkan gaji untuk <strong>{{ $selected->nama_karyawan }}</strong>
         </div>
 
-        <a href="{{ route('gaji.print', $karyawan->id) }}?t={{ time() }}" target="_blank" class="btn btn-warning py-2 px-3">
+        <a href="{{ route('gaji.print', $selected->id) }}" target="_blank" class="btn btn-warning py-2 px-3">
             <i class="ti ti-printer me-2"></i> Print
         </a>
     </div>

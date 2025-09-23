@@ -220,13 +220,6 @@ public function filter(Request $request):View
             'dataPerHari' => $dataPerHari,
         ])->setPaper('A4', 'portrait');
 
-        $filename = 'laporan-gaji-' . $karyawan->nama_karyawan . '-' . now()->format('YmdHis') . '.pdf';
-
-        return response($pdf->output(), 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0')
-            ->header('Content-Disposition', 'inline; filename="'.$filename.'"');
+        return $pdf->download('laporan-gaji-' . $karyawan->nama_karyawan . '.pdf');
     }
 }
