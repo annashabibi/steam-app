@@ -23,6 +23,7 @@ class Transaction extends Model
         'midtrans_payment_type',
         'qr_url',
         'expiry_time',
+        'qr_string',
     ];
 
     protected $casts = [

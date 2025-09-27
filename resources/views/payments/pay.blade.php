@@ -89,22 +89,22 @@
 
         <div class="card mt-3">
             <div class="card-body">
-                {{-- <p><strong>Nama Karyawan:</strong> {{ $transaction->karyawan->nama_karyawan }}</p>
-                <p><strong>Motor:</strong> {{ $transaction->motor->nama_motor }}</p>
-                <p><strong>Total:</strong> Rp{{ number_format($transaction->total, 0, ',', '.') }}</p> --}}
-
                 {{-- Status pembayaran --}}
-                @if(in_array($transaction->payment_status, ['settlement', 'capture']))
+                @if(in_array($transaction->payment_status, ['settlement', 'capture', 'paid']))
                     <div class="alert alert-success mt-3">
-                        Pembayaran berhasil ✅
+                        Pembayaran berhasil
                     </div>
                 @else
                     <div class="mt-4 text-center">
-                        <h5>Scan QR Code</h5>
+                        <h5>Scan QRIS</h5>
                         @if($deeplink)
-                            {{-- QR Code dari deeplink --}}
-                            {!! QrCode::size(250)->generate($deeplink) !!}
-                            
+                            <div class="text-center">
+                                {!! QrCode::size(250)->generate($deeplink) !!}
+                            </div>
+                            {{-- Logo QRIS --}}
+                            <div class="mt-1">
+                                <img src="{{ asset('images/qris.png') }}" alt="QRIS Logo" style="max-width: 140px;">
+                            </div>
                             {{-- Countdown Timer --}}
                             <div>
                                 <div id="countdown" class="countdown-timer"></div>
@@ -171,7 +171,7 @@
             }
         });
 
-        function checkPaymentStatus() {
+    function checkPaymentStatus() {
     const checkBtn = document.getElementById("checkStatusBtn");
     checkBtn.disabled = true;
     checkBtn.innerHTML = `<span class="loading-spinner"></span> Memeriksa...`;
@@ -179,17 +179,18 @@
     fetch("{{ route('payment.checkStatus', $transaction->id) }}")
         .then(response => response.json())
         .then(data => {
-            if(data.status === 'settlement' || data.status === 'capture') {
+            if(data.status === 'settlement' || data.status === 'capture' || data.status === 'paid') {
                 Swal.fire({
                 icon: 'success',
-                title: 'Pembayaran Berhasil!',
-                text: `Total: Rp${data.total.toLocaleString('id-ID')}`,
+                title: 'Success',
+                text: 'Transaksi berhasil disimpan.',
                 timer: 2000,
                 showConfirmButton: false,
                 willClose: () => {
                     window.location.href = "{{ route('transactions.index') }}";
                 }
             });
+            clearInterval(autoCheck);
             } else if(data.status === 'pending') {
                 Swal.fire({
                     icon: 'info',
@@ -208,6 +209,7 @@
                     timer: 2500,
                     showConfirmButton: true
                 });
+                clearInterval(autoCheck);
                 checkBtn.disabled = false;
                 checkBtn.innerHTML = "Cek Status Pembayaran";
             }
@@ -223,6 +225,7 @@
             checkBtn.innerHTML = "Cek Status Pembayaran";
             console.error(err);
         });
-}
+    }
+    let autoCheck = setInterval(checkPaymentStatus, 20000);
     </script>
 </x-app-layout>

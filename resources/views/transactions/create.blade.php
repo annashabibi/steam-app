@@ -174,7 +174,7 @@
                 $(this).val(formatNumber(total));
             });
 
-                // Set value payment_method based on button click
+                // Spinner
                 $('#btn-cash').click(function() {
                 $(this).html('<i class="spinner-border spinner-border-sm"></i> Processing...').prop('disabled', true);
                 $('#payment_method').val('cash');

@@ -23,10 +23,10 @@ class HelmTransactionController extends Controller
 
     if ($request->search) {
         // menampilkan pencarian data
-        $helm_transaction = HelmTransaction::select('id', 'nama_customer', 'tanggal_cuci', 'tanggal_selesai', 'payment_method', 'payment_status', 'midtrans_payment_type')
+        $helm_transaction = HelmTransaction::select('id', 'nama_customer', 'tanggal_cuci', 'tanggal_selesai', 'payment_method', 'payment_status', 'midtrans_payment_type', 'qr_url', 'qr_string', 'expiry_time')
             ->with(['helmitems:helm_transaction_id,nama_helm,type_helm,karyawan_id,harga', 'helmitems.karyawan:id,nama_karyawan'])
             ->where(function($query) use ($request) {
-                $query->whereAny(['nama_customer', 'payment_method', 'payment_status', 'midtrans_payment_type'], 'LIKE', '%' . $request->search . '%')
+                $query->whereAny(['nama_customer', 'payment_method', 'payment_status', 'midtrans_payment_type', 'qr_url', 'qr_string', 'expiry_time',], 'LIKE', '%' . $request->search . '%')
                     ->orWhereHas('helmitems', function($subQuery) use ($request) {
                         $subQuery->where('nama_helm', 'LIKE', '%' . $request->search . '%')
                             ->orWhere('type_helm', 'LIKE', '%' . $request->search . '%');
@@ -39,7 +39,7 @@ class HelmTransactionController extends Controller
             ->withQueryString();
     } else {
         // menampilkan semua data
-        $helm_transaction = HelmTransaction::select('id', 'nama_customer', 'tanggal_cuci', 'tanggal_selesai', 'payment_method', 'payment_status', 'midtrans_payment_type')
+        $helm_transaction = HelmTransaction::select('id', 'nama_customer', 'tanggal_cuci', 'tanggal_selesai', 'payment_method', 'payment_status', 'midtrans_payment_type', 'qr_url', 'qr_string', 'expiry_time')
             ->with(['helmitems:helm_transaction_id,nama_helm,type_helm,karyawan_id,harga', 'helmitems.karyawan:id,nama_karyawan'])
             ->latest()
             ->paginate($pagination);
@@ -52,7 +52,7 @@ class HelmTransactionController extends Controller
     // Tampilkan form tambah transaksi helm
     public function create()
     {
-        $karyawans = Karyawan::where('aktif', true)->get();
+        $karyawans = Karyawan::where('aktif', true)->get(['id', 'nama_karyawan']);
         return view('helms.create', compact('karyawans'));
     }
 
@@ -103,7 +103,7 @@ class HelmTransactionController extends Controller
         return redirect()->route('helms.index')->with('success', 'Transaksi berhasil disimpan');
     }
 
-    // Jika online → redirect ke Midtrans
+    // Midtrans
     return redirect()->route('helms.pay', $helm->id);
 }
 
@@ -119,17 +119,29 @@ class HelmTransactionController extends Controller
             return redirect()->route('helms.index')->with(['success' => 'The transaction has been deleted!']);
         }
 
-public function deleteAll()
+        public function transaction($id)
 {
-    try {
-        foreach (HelmTransaction::all() as $helm) {
-            $helm->helmItems()->delete();
-            $helm->delete();
-        }
+    // Load helm transaction beserta item-item helm
+    $helm_transaction = HelmTransaction::with('helmitems')->findOrFail($id);
 
-        return redirect()->route('helms.index')->with('success', 'Semua data berhasil dihapus.');
-    } catch (\Exception $e) {
-        return redirect()->route('helms.index')->with('error', 'Gagal menghapus: ' . $e->getMessage());
+    // Kalau bukan pakai Midtrans, bisa redirect atau handle lain
+    if ($helm_transaction->payment_method !== 'online') {
+        return redirect()->route('helms.index', $helm_transaction->id);
     }
+
+    // Status lunas
+    $isPaid = strtolower($helm_transaction->payment_status) === 'paid';
+
+    // QRIS & expiry sudah tersimpan di DB, pakai itu
+    $deeplink = $helm_transaction->qr_string ?? null;
+    $time_qr  = $helm_transaction->expiry_time ?? null;
+
+    return view('payments.pay_helm', [
+        'helm_transaction' => $helm_transaction,
+        'isPaid'           => $isPaid,
+        'deeplink'         => $deeplink,
+        'time_qr'          => $time_qr,
+    ]);
 }
+
 }

@@ -24,19 +24,19 @@ class PaymentController extends Controller
     Config::$isSanitized = true;
     Config::$is3ds = true;
 
-    if ($transaction->midtrans_transaction_id && $transaction->qr_url) {
-        $deeplink = $transaction->qr_url;
+    // Qris
+    if ($transaction->midtrans_transaction_id && $transaction->qr_string) {
+        $deeplink = $transaction->qr_string;
         $time_qr  = $transaction->expiry_time;
 
     } else {
-        // Order ID wajib ada
         if (empty($transaction->midtrans_order_id)) {
             abort(400, 'Order ID tidak valid');
         }
 
         try {
             $params = [
-                'payment_type' => 'gopay',
+                'payment_type' => 'qris',
                 'transaction_details' => [
                     'order_id'     => $transaction->midtrans_order_id,
                     'gross_amount' => (int) $transaction->total,
@@ -50,27 +50,27 @@ class PaymentController extends Controller
                 'customer_details' => [
                     'first_name' => $transaction->karyawan->nama_karyawan ?? 'Customer',
                 ],
-                'gopay' => [
-                    'enable_callback' => true,
-                ],
             ];
 
             $charge = CoreApi::charge($params);
 
-            $deeplink = collect($charge->actions)->firstWhere('name', 'deeplink-redirect')->url ?? null;
+            $qrString = $charge->qr_string ?? null;
             $expiry   = $charge->expiry_time ?? null;
 
             $transaction->update([
-                'midtrans_payment_type'   => 'gopay',
+                'midtrans_payment_type'   => 'qris',
                 'midtrans_transaction_id' => $charge->transaction_id ?? null,
                 'payment_status'          => $charge->transaction_status ?? 'pending',
-                'qr_url'                  => $deeplink,
+                'qr_string'               => $qrString,
+                'qr_url'                  => $charge->actions[0]->url ?? null,
                 'expiry_time'             => $expiry,
             ]);
 
-            $time_qr = $expiry;
+            $deeplink = $qrString;
+            $time_qr  = $expiry;
+
         } catch (\Exception $e) {
-            Log::error('Midtrans GoPay Error: ' . $e->getMessage());
+            Log::error('Midtrans QRIS Error: ' . $e->getMessage());
             abort(500, 'Midtrans Error: ' . $e->getMessage());
         }
     }
@@ -86,24 +86,6 @@ class PaymentController extends Controller
         'total' => $transaction->total,
         'message' => 'Status terbaru berhasil diambil'
     ]);
-
-    // Optional: jika ingin real-time langsung ke Midtrans
-    /*
-    try {
-        $status = \Midtrans\Transaction::status($transaction->midtrans_order_id);
-        $transaction->update([
-            'payment_status' => $status->transaction_status
-        ]);
-
-        return response()->json([
-            'status' => $status->transaction_status,
-            'gross_amount' => $status->gross_amount,
-            'message' => 'Status berhasil diambil dari Midtrans'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-    */
 }
 
     public function webhook(Request $request)
@@ -199,59 +181,79 @@ public function payHelm(HelmTransaction $helm_transaction): View
 {
     Config::$serverKey = config('midtrans.server_key');
     Config::$isProduction = config('midtrans.is_production');
-    Config::$isSanitized = config('midtrans.is_sanitized');
+    Config::$isSanitized = true;
     Config::$is3ds = config('midtrans.is_3ds');
-
-    // Validasi order_id
-    if (
-        $helm_transaction->midtrans_payment_type !== null &&
-        empty($helm_transaction->midtrans_order_id)
-    ) {
-        abort(400, 'Order ID tidak valid');
-    }
 
     // Hitung total harga dari semua helm item
     $total = $helm_transaction->helmitems->sum('harga');
 
-    $params = [
-        'enabled_payments' => ['qris', 'gopay', 'shopeepay', 'bank_transfer'],
-        'transaction_details' => [
-            'order_id'     => $helm_transaction->midtrans_order_id,
-            'gross_amount' => (int) $total,
-        ],
-        'item_details' => $helm_transaction->helmitems->map(function ($item) {
-            return [
-                'id'       => $item->id,
-                'price'    => (int) $item->harga,
-                'quantity' => 1,
-                'name'     => 'Cuci Helm - ' . $item->type_helm,
-            ];
-        })->toArray(),
-        'customer_details' => [
-            'first_name' => $helm_transaction->nama_customer ?? 'Customer',
-        ],
-    ];
+    // Gunakan QR yang sudah ada jika ada
+    if ($helm_transaction->midtrans_transaction_id && $helm_transaction->qr_string) {
+        $deeplink = $helm_transaction->qr_string;
+        $time_qr  = $helm_transaction->expiry_time;
+    } else {
+        // Pastikan order_id valid
+        if (empty($helm_transaction->midtrans_order_id)) {
+            abort(400, 'Order ID tidak valid');
+        }
 
-    if (!$helm_transaction->midtrans_snap_token) {
         try {
-            $snapToken = Snap::getSnapToken($params);
-            $helm_transaction->update(['midtrans_snap_token' => $snapToken]);
+            $params = [
+                'payment_type' => 'qris',
+                'transaction_details' => [
+                    'order_id'     => $helm_transaction->midtrans_order_id,
+                    'gross_amount' => (int) $total,
+                ],
+                'item_details' => $helm_transaction->helmitems->map(function ($item) {
+                    return [
+                        'id'       => $item->id,
+                        'price'    => (int) $item->harga,
+                        'quantity' => 1,
+                        'name'     => 'Cuci Helm - ' . $item->type_helm,
+                    ];
+                })->toArray(),
+                'customer_details' => [
+                    'first_name' => $helm_transaction->nama_customer ?? 'Customer',
+                ],
+            ];
+
+            // Charge ke Midtrans
+            $charge = CoreApi::charge($params);
+
+            // Ambil qr_string & expiry
+            $qrString = $charge->qr_string ?? null;
+            $expiry   = $charge->expiry_time ?? null;
+
+            // Simpan ke DB
+            $helm_transaction->update([
+                'midtrans_payment_type'   => 'qris',
+                'midtrans_transaction_id' => $charge->transaction_id ?? null,
+                'payment_status'          => $charge->transaction_status ?? 'pending',
+                'qr_url'                  => $charge->actions[0]->url ?? null,
+                'qr_string'               => $qrString,
+                'expiry_time'             => $expiry,
+            ]);
+
+            $deeplink = $qrString;
+            $time_qr  = $expiry;
+
         } catch (\Exception $e) {
-            Log::error('Midtrans Snap Token Error (Helm): ' . $e->getMessage());
+            Log::error('Midtrans QRIS Error (Helm): ' . $e->getMessage());
             abort(500, 'Midtrans Error: ' . $e->getMessage());
         }
-    } else {
-        $snapToken = $helm_transaction->midtrans_snap_token;
     }
 
+    // Load relasi helmitems
     $helm_transaction->load('helmitems');
 
     $isPaid = strtolower($helm_transaction->payment_status) === 'paid';
 
     return view('payments.pay_helm', [
         'helm_transaction' => $helm_transaction,
-        'snapToken' => $snapToken,
-        'isPaid' => $isPaid
+        'deeplink'         => $deeplink,
+        'time_qr'          => $time_qr,
+        'isPaid'           => $isPaid
     ]);
 }
+
 }

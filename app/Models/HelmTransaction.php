@@ -20,12 +20,17 @@ class HelmTransaction extends Model
         'midtrans_order_id',
         'midtrans_transaction_id',
         'midtrans_payment_type',
-        'midtrans_snap_token',
+        'qr_url',
+        'qr_string',
+        'expiry_time',
     ];
-
-    // Relasi ke helm_items
     public function helmitems(): HasMany
     {
         return $this->hasMany(HelmItem::class);
     }
+
+    protected $casts = [
+        'tanggal_cuci' => 'datetime',
+        'tanggal_selesai' => 'datetime',
+    ];
 }

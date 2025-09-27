@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('helms', HelmTransactionController::class);
     Route::post('/helms/deleteAll', [HelmTransactionController::class, 'deleteAll'])->name('helms.deleteAll');
     Route::get('/helms/{helm_transaction}/pay', [PaymentController::class, 'payHelm'])->name('helms.pay');
+    Route::get('/helms/{id}/transaction', [HelmTransactionController::class, 'transaction'])->name('helms.transaction');
 });
 
 // Route::withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
