@@ -89,12 +89,7 @@
                                 <div class="modal fade" id="modalDetail{{ $transaction->id }}" tabindex="-1" aria-labelledby="modalDetailLabel{{ $transaction->id }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content border-0 shadow-lg">
-                                            {{-- <div class="modal-header bg-primary text-white border-0">
-                                                <h5 class="modal-title fw-bold" id="modalDetailLabel{{ $transaction->id }}">
-                                                    <i class="ti ti-receipt me-2"></i>Detail Transaksi
-                                                </h5> --}}
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            {{-- </div> --}}
             
                                 <div class="modal-body p-0">
                                     <div class="card border-0 rounded-0" id="transaksiContent{{ $transaction->id }}">
@@ -135,7 +130,7 @@
                                     && $transaction->expiry_time 
                                     && now()->lt(\Carbon\Carbon::parse($transaction->expiry_time)))
                                     <div class="text-center my-3">
-                                        {!! QrCode::size(250)->generate($transaction->qr_url) !!}
+                                        {!! QrCode::size(250)->generate($transaction->qr_string) !!}
                                         <p class="small text-muted mt-2">
                                             <div>
                                                 <div class="countdown" data-expired="{{ $transaction->expiry_time }}" id="countdown{{ $transaction->id }}"></div>
@@ -212,10 +207,11 @@
                             </p>
                             <p class="text-muted small mb-0">Terima kasih atas kepercayaan Anda!</p>
                         </div>
+
+                        </div>
                     </div>
                 </div>
-            </div>
-            
+
                         <div class="modal-footer border-0 bg-light">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 Tutup
