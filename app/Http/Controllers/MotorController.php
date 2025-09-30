@@ -67,10 +67,14 @@ class MotorController extends Controller
         // $image->storeAs('public/motors', $image->hashName());
 
         // Upload image ke Cloudinary
-        $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())
-                                    ->getSecurePath();
+         $file = $request->file('image');
+    if (!$file) {
+        return back()->withErrors(['image' => 'No file uploaded.']);
+    }
 
-        // create data
+    try {
+        $uploadedFileUrl = Cloudinary::upload($file->getRealPath())->getSecurePath();
+
         Motor::create([
             'category_id' => $request->category,
             'nama_motor'  => $request->nama_motor,
@@ -78,11 +82,12 @@ class MotorController extends Controller
             'image'       => $uploadedFileUrl
         ]);
 
-        // dd($request->all());
-
-        // redirect ke halaman index dan tampilkan pesan berhasil simpan data
-        return redirect()->route('motors.index')->with(['success' => 'The new motor has been saved.']);
+        return redirect()->route('motors.index')
+                         ->with(['success' => 'Motor berhasil ditambahkan.']);
+    } catch (\Exception $e) {
+        return back()->withErrors(['image' => 'Upload failed: '.$e->getMessage()]);
     }
+}
 
 
     /**
