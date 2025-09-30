@@ -52,29 +52,25 @@ class MotorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
-    {
-        // validasi form
-        $request->validate([
-            'category'    => 'required|exists:categories,id',
-            'nama_motor'  => 'required',
-            'harga'       => 'required',
-            'image'       => 'required|image|mimes: jpeg,jpg,png|max: 1024'
-        ]);
-
-        // upload image local
-        // $image = $request->file('image');
-        // $image->storeAs('public/motors', $image->hashName());
-
-        // Upload image ke Cloudinary
-         $file = $request->file('image');
-    if (!$file) {
-        return back()->withErrors(['image' => 'No file uploaded.']);
-    }
+    public function store(Request $request)
+{
+    $request->validate([
+        'category'   => 'required|exists:categories,id',
+        'nama_motor' => 'required',
+        'harga'      => 'required',
+        'image'      => 'required|image|mimes:jpeg,jpg,png|max:1024'
+    ]);
 
     try {
+        $file = $request->file('image');
+        if (!$file) {
+            throw new \Exception('File image tidak diterima.');
+        }
+
+        // Upload ke Cloudinary
         $uploadedFileUrl = Cloudinary::upload($file->getRealPath())->getSecurePath();
 
+        // Simpan ke database
         Motor::create([
             'category_id' => $request->category,
             'nama_motor'  => $request->nama_motor,
@@ -84,10 +80,13 @@ class MotorController extends Controller
 
         return redirect()->route('motors.index')
                          ->with(['success' => 'Motor berhasil ditambahkan.']);
+
     } catch (\Exception $e) {
-        return back()->withErrors(['image' => 'Upload failed: '.$e->getMessage()]);
+        // Menangkap semua error dan menampilkannya di form
+        return back()->withErrors(['image' => 'Terjadi error: '.$e->getMessage()]);
     }
 }
+
 
 
     /**
