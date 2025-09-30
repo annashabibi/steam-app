@@ -7,6 +7,7 @@ use App\Models\Motor;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 class MotorController extends Controller
 {
@@ -55,10 +56,10 @@ class MotorController extends Controller
     {
         // validasi form
         $request->validate([
-            'category' => 'required|exists:categories,id',
-            'nama_motor' => 'required',
-            'harga' => 'required',
-            'image' => 'required|image|mimes: jpeg,jpg,png|max: 1024'
+            'category'    => 'required|exists:categories,id',
+            'nama_motor'  => 'required',
+            'harga'       => 'required',
+            'image'       => 'required|image|mimes: jpeg,jpg,png|max: 1024'
         ]);
 
         // upload image local
@@ -66,21 +67,19 @@ class MotorController extends Controller
         // $image->storeAs('public/motors', $image->hashName());
 
         // production upload image to Cloudinary
-        $uploadedFileUrl = Cloudinary::upload(
-            $request->file('image')->getRealPath(),
+        $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath(),
             [
                 'folder' => 'motors',
                 'overwrite' => true,
                 'resource_type' => 'image'
-            ]
-        )->getSecurePath();
+            ])->getSecurePath();
 
         // create data
         Motor::create([
             'category_id' => $request->category,
-            'nama_motor' => $request->nama_motor,
-            'harga' => str_replace('.', '', $request->harga),
-            'image' => $uploadedFileUrl
+            'nama_motor'  => $request->nama_motor,
+            'harga'       => str_replace('.', '', $request->harga),
+            'image'       => $uploadedFileUrl
         ]);
 
         // dd($request->all());
@@ -121,10 +120,10 @@ class MotorController extends Controller
     {
         // validasi form
         $request->validate([
-            'category' => 'required|exists:categories,id',
-            'nama_motor' => 'required',
-            'harga' => 'required',
-            'image' => 'image|mimes: jpeg,jpg,png|max: 1024'
+            'category'    => 'required|exists:categories,id',
+            'nama_motor'  => 'required',
+            'harga'       => 'required',
+            'image'       => 'image|mimes: jpeg,jpg,png|max: 1024'
         ]);
 
         // get data by ID
@@ -132,7 +131,7 @@ class MotorController extends Controller
 
         // cek jika image diubah
         if ($request->hasFile('image')) {
-            // upload image baru ke Cloudinary
+            // upload image baru ke Cloudinary folder "motors"
             $uploadedFileUrl = Cloudinary::upload(
                 $request->file('image')->getRealPath(),
                 [
@@ -142,21 +141,22 @@ class MotorController extends Controller
                 ]
             )->getSecurePath();
 
-            // update data
+            // update data + ganti image baru
             $motor->update([
                 'category_id' => $request->category,
-                'nama_motor' => $request->nama_motor,
-                'harga' => str_replace('.', '', $request->harga),
-                'image' => $uploadedFileUrl
+                'nama_motor'  => $request->nama_motor,
+                'harga'       => str_replace('.', '', $request->harga),
+                'image'       => $uploadedFileUrl
             ]);
         } else {
             // update data tanpa ganti image
             $motor->update([
                 'category_id' => $request->category,
-                'nama_motor' => $request->nama_motor,
-                'harga' => str_replace('.', '', $request->harga),
+                'nama_motor'  => $request->nama_motor,
+                'harga'       => str_replace('.', '', $request->harga),
             ]);
         }
+
 
         // redirect ke halaman index dan tampilkan pesan berhasil ubah data
         return redirect()->route('motors.index')->with(['success' => 'The product has been updated.']);
@@ -170,12 +170,8 @@ class MotorController extends Controller
         // get data by ID
         $motor = Motor::findOrFail($id);
 
-        // delete image from Cloudinary if exists
-        if ($motor->image) {
-            // Extract public_id from the image URL
-            $publicId = pathinfo(parse_url($motor->image, PHP_URL_PATH), PATHINFO_FILENAME);
-            Cloudinary::destroy('motors/' . $publicId);
-        }
+        // delete image
+        Storage::delete('public/motors/' . $motor->image);
 
         // delete data
         $motor->delete();
