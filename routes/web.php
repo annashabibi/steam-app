@@ -35,17 +35,13 @@ Route::middleware('auth')->group(function () {
 
     // Transactions CRUD plus deleteAll
     Route::resource('transactions', TransactionController::class);
-    // Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
-    // Route::post('/transactions/deleteAll', [TransactionController::class, 'deleteAll'])->name('transactions.deleteAll');
 
     // Pengeluaran CRUD plus deleteAll
     Route::resource('pengeluaran', PengeluaranController::class);
-    // Route::post('/pengeluaran/deleteAll', [PengeluaranController::class, 'deleteAll'])->name('pengeluaran.deleteAll');
 
     // Pendapatan index
     Route::get('/gaji', [GajiController::class, 'index'])->name('gaji.index');
     Route::get('/gaji/filter', [GajiController::class, 'filter'])->name('gaji.filter');
-    // Route::post('/gaji/store', [GajiController::class, 'store'])->name('gaji.store');
     Route::get('/gaji/print/{id}', [GajiController::class, 'printGaji'])->name('gaji.print');
 
 

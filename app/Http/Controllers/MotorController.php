@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Motor;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -61,16 +62,20 @@ class MotorController extends Controller
             'image'       => 'required|image|mimes: jpeg,jpg,png|max: 1024'
         ]);
 
-        // upload image
-        $image = $request->file('image');
-        $image->storeAs('public/motors', $image->hashName());
+        // upload image local
+        // $image = $request->file('image');
+        // $image->storeAs('public/motors', $image->hashName());
+
+        // Upload image ke Cloudinary
+        $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())
+                                    ->getSecurePath();
 
         // create data
         Motor::create([
             'category_id' => $request->category,
             'nama_motor'  => $request->nama_motor,
             'harga'       => str_replace('.', '', $request->harga),
-            'image'       => $image->hashName()
+            'image'       => $uploadedFileUrl
         ]);
 
         // dd($request->all());
