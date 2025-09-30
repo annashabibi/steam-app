@@ -100,6 +100,7 @@ class MotorController extends Controller
         // tampilkan form detail data
         return view('motors.show', compact('motor'));
     }
+    
     /**
      * Show the form for editing the specified resource.
      */

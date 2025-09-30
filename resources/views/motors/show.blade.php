@@ -6,7 +6,7 @@
         {{-- tampilkan detail data --}}
         <div class="row flex-lg-row align-items-center g-5">
             <div class="col-lg-3">
-                <img src="{{ {{ $motor->image }} }}" class="d-block mx-lg-auto img-thumbnail rounded-4 shadow-sm" alt="Images" loading="lazy">
+                <img src="{{ $motor->image }}" class="d-block mx-lg-auto img-thumbnail rounded-4 shadow-sm" alt="Images" loading="lazy">
             </div>
             <div class="col-lg-9">
                 <h4>{{ $motor->nama_motor }}</h4>
