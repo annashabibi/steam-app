@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 
     // Transactions CRUD plus deleteAll
     Route::resource('transactions', TransactionController::class);
-    Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+    // Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
     // Route::post('/transactions/deleteAll', [TransactionController::class, 'deleteAll'])->name('transactions.deleteAll');
 
     // Pengeluaran CRUD plus deleteAll
