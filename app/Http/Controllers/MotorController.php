@@ -67,8 +67,12 @@ class MotorController extends Controller
         // $image->storeAs('public/motors', $image->hashName());
 
         // production upload image to Cloudinary
-        $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())
-                                    ->getSecurePath();
+        $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath(),
+            [
+                'folder' => 'motors',
+                'overwrite' => true,
+                'resource_type' => 'image'
+            ])->getSecurePath();
 
         // create data
         Motor::create([
