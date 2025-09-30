@@ -39,8 +39,13 @@
                     {{-- jika data ada, tampilkan data --}}
                     <tr>
                         <td width="30" class="text-center">{{ ++$i }}</td>
-                        <td width="50" class="text-center">
+                        {{-- local --}}
+                        {{-- <td width="50" class="text-center">
                             <img src="{{ asset('/storage/motors/'.$motor->image) }}" class="img-thumbnail rounded-4" width="80" alt="Images">
+                        </td> --}}
+                        {{-- production --}}
+                        <td width="50" class="text-center">
+                            <img src="{{ $motor->image }}" class="img-thumbnail rounded-4" width="80" alt="Images">
                         </td>
                         <td width="200">{{ $motor->nama_motor }}</td>
                         <td width="80" class="text-end">{{ 'Rp ' . number_format($motor->harga, 0, '', '.') }}</td>
