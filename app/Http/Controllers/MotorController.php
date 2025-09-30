@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Motor;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -52,41 +51,33 @@ class MotorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-{
-    $request->validate([
-        'category'   => 'required|exists:categories,id',
-        'nama_motor' => 'required',
-        'harga'      => 'required',
-        'image'      => 'required|image|mimes:jpeg,jpg,png|max:1024'
-    ]);
+    public function store(Request $request): RedirectResponse
+    {
+        // validasi form
+        $request->validate([
+            'category'    => 'required|exists:categories,id',
+            'nama_motor'  => 'required',
+            'harga'       => 'required',
+            'image'       => 'required|image|mimes: jpeg,jpg,png|max: 1024'
+        ]);
 
-    try {
-        $file = $request->file('image');
-        if (!$file) {
-            throw new \Exception('File image tidak diterima.');
-        }
+        // upload image
+        $image = $request->file('image');
+        $image->storeAs('public/motors', $image->hashName());
 
-        // Upload ke Cloudinary
-        $uploadedFileUrl = Cloudinary::upload($file->getRealPath())->getSecurePath();
-
-        // Simpan ke database
+        // create data
         Motor::create([
             'category_id' => $request->category,
             'nama_motor'  => $request->nama_motor,
             'harga'       => str_replace('.', '', $request->harga),
-            'image'       => $uploadedFileUrl
+            'image'       => $image->hashName()
         ]);
 
-        return redirect()->route('motors.index')
-                         ->with(['success' => 'Motor berhasil ditambahkan.']);
+        // dd($request->all());
 
-    } catch (\Exception $e) {
-        // Menangkap semua error dan menampilkannya di form
-        return back()->withErrors(['image' => 'Terjadi error: '.$e->getMessage()]);
+        // redirect ke halaman index dan tampilkan pesan berhasil simpan data
+        return redirect()->route('motors.index')->with(['success' => 'The new motor has been saved.']);
     }
-}
-
 
 
     /**
