@@ -68,7 +68,7 @@
 
                         {{-- view image --}}
                         <div class="mt-4">
-                            <img id="imagePreview" src="{{ asset('/storage/motors/'.$motor->image) }}" class="img-thumbnail rounded-4 shadow-sm" width="50%" alt="Image">
+                            <img id="imagePreview" src="{{ $motor->image }}" class="img-thumbnail rounded-4 shadow-sm" width="50%" alt="Image">
                         </div>
                     </div>
                 </div>
