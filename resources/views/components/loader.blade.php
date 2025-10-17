@@ -59,7 +59,7 @@
                 setTimeout(() => {
                     loader.style.display = 'none';
                 }, 500);
-            }, 300);
+            }, 500);
         });
 
         // Tangkap semua klik pada link navigasi
