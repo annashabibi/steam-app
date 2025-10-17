@@ -20,7 +20,7 @@ class FoodController extends Controller
         if ($request->search) {
             // menampilkan pencarian data
             $foods = Food::select('id', 'nama_produk', 'category', 'image', 'qty', 'harga')
-                ->where(['nama_produk', 'category', 'harga'], 'LIKE', '%' . $request->search . '%')
+                ->whereAny(['nama_produk', 'category', 'harga'], 'LIKE', '%' . $request->search . '%')
                 ->paginate($pagination)
                 ->withQueryString();
         } else {
