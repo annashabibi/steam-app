@@ -12,17 +12,261 @@ body {
     font-style: normal;
 }
 
-.countdown-timer {
-        font-weight: bold;
-        font-size: 1.1rem;
+/* Container Scroll */
+.food-scroll-container {
+    background: #fff;
+    padding: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Custom Scrollbar */
+.food-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.food-scroll-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.food-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.food-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Grid Layout */
+.food-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    width: max-content;
+}
+
+/* Food Card */
+.food-card {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+    width: 130px;
+    min-width: 130px;
+    flex-shrink: 0;
+}
+
+.food-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Food Image */
+.food-image {
+    width: 100%;
+    height: 130px;
+    background: #f8f9fa;
+    position: relative;
+    overflow: hidden;
+}
+
+.food-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.food-card:hover .food-image img {
+    transform: scale(1.08);
+}
+
+/* Food Details */
+.food-details {
+    text-align: center;
+    padding-top: 0.5rem;
+}
+
+.product-name {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    min-height: 2.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-price {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 0.2rem;
+}
+
+/* Quantity Controls */
+.quantity-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity {
+    min-width: 28px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #2d3748;
+}
+
+/* Buttons */
+.food-card .btn-sm {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+    border-width: 1.5px;
+}
+
+.food-card .btn-sm:hover {
+    transform: scale(1.1);
+}
+
+.food-card .btn-sm:active {
+    transform: scale(0.95);
+}
+
+/* Desktop - Ukuran sedikit lebih besar */
+@media (min-width: 992px) {
+    .food-card {
+        width: 150px;
+        min-width: 150px;
     }
-    .countdown-red {
-        color: red;
+    
+    .food-image {
+        height: 150px;
     }
-    .countdown-expired {
-        color: gray;
-        font-weight: bold;
+    
+    .product-name {
+        font-size: 0.9rem;
+        min-height: 2.4rem;
     }
+    
+    .product-price {
+        font-size: 0.85rem;
+    }
+    
+    .food-card .btn-sm {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    
+    .quantity {
+        min-width: 30px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Tablet */
+@media (min-width: 577px) and (max-width: 991px) {
+    .food-card {
+        width: 140px;
+        min-width: 140px;
+    }
+    
+    .food-image {
+        height: 140px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .food-scroll-container {
+        padding: 0.75rem;
+    }
+    
+    .food-card {
+        width: 120px;
+        min-width: 120px;
+    }
+    
+    .food-image {
+        height: 120px;
+    }
+    
+    .product-name {
+        font-size: 0.8rem;
+        min-height: 2rem;
+    }
+    
+    .product-price {
+        font-size: 0.75rem;
+    }
+    
+    .food-card .btn-sm {
+        width: 26px;
+        height: 26px;
+        font-size: 0.9rem;
+    }
+    
+    .quantity {
+        min-width: 26px;
+        font-size: 0.85rem;
+    }
+    
+    .quantity-controls {
+        gap: 0.4rem;
+    }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 400px) {
+    .food-card {
+        width: 110px;
+        min-width: 110px;
+    }
+    
+    .food-image {
+        height: 110px;
+    }
+    
+    .product-name {
+        font-size: 0.75rem;
+    }
+    
+    .food-card .btn-sm {
+        width: 24px;
+        height: 24px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Smooth Scroll Behavior */
+@media (prefers-reduced-motion: no-preference) {
+    .food-scroll-container {
+        scroll-behavior: smooth;
+    }
+}
+
+.countdown-red {
+    color: red;
+}
+    
+.countdown-expired {
+    color: gray;
+    font-weight: bold;
+}
 
 .brand {
     font-family: 'Soopafre', sans-serif;
@@ -787,6 +1031,124 @@ hr {
 
 .burger input:checked ~ span:nth-of-type(3) {
   transform: rotate(-45deg);
-  top: 21px;  /* sesuaikan dengan height baru */
+  top: 21px; 
   left: 3px;
+}
+
+.refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  gap: 8px;
+  border: none;
+  outline: none;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+  background: rgba(37, 99, 235, 0.15);
+  transform: translateY(-1px);
+}
+
+.refresh-button:active {
+  transform: scale(0.97);
+}
+
+/* Spinner aktif hanya saat tombol loading */
+.refresh-button.loading .svg-icon {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Label */
+.label {
+  user-select: none;
+  font-size: 14px;
+}
+
+/* From Uiverse.io by Subaashbala */ 
+/* Prior to using this loader, please ensure that you have set a background image or background color, as the text is transparent and not designed with a solid color. */
+.loader {
+  --ANIMATION-DELAY-MULTIPLIER: 70ms;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.loader span {
+  padding: 0;
+  margin: 0;
+  letter-spacing: -5rem;
+  animation-delay: 0s;
+  transform: translateY(4rem);
+  animation: hideAndSeek 1s alternate infinite cubic-bezier(0.86, 0, 0.07, 1);
+}
+.loader .l {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 0);
+}
+.loader .o {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 1);
+}
+.loader .a {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 2);
+}
+.loader .d {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 3);
+}
+.loader .ispan {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 4);
+}
+.loader .n {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 5);
+}
+.loader .g {
+  animation-delay: calc(var(--ANIMATION-DELAY-MULTIPLIER) * 6);
+}
+.letter {
+  width: fit-content;
+  height: 3rem;
+}
+.i {
+  margin-inline: 5px;
+}
+@keyframes hideAndSeek {
+  0% {
+    transform: translateY(4rem);
+  }
+  100% {
+    transform: translateY(0rem);
+  }
+}
+
+/* FIX posisi loader agar di tengah layar */
+#global-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2); /* 0.2 = 20% putih, bisa ubah sesuka kamu */
+  backdrop-filter: blur(4px); /* opsional: kasih efek blur */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+
+.hidden {
+  display: none;
 }
