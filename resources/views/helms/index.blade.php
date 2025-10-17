@@ -9,9 +9,6 @@
                 <a href="{{ route('helms.create') }}" class="btn btn-primary py-2 px-3">
                     <i class="ti ti-plus me-2"></i> Add Helm Transaction
                 </a>
-                <button type="button" class="btn btn-danger py-2 px-3" data-bs-toggle="modal" data-bs-target="#modalDeleteAll">
-                    <i class="ti ti-trash me-2"></i> Delete All Transactions
-                </button>
 
                 {{-- Modal Delete All --}}
                 <div class="modal fade" id="modalDeleteAll" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalDeleteAllLabel" aria-hidden="true">
@@ -110,15 +107,19 @@
                         <td width="100" class="text-center">{{ \Carbon\Carbon::parse($helm->tanggal_cuci)->translatedFormat('l, d F Y') }}</td>
                         <td width="100" class="text-center">{{ $helm->tanggal_selesai ? \Carbon\Carbon::parse($helm->tanggal_selesai)->translatedFormat('l, d F Y') : '-' }}</td>
                         <td width="120" class="text-center">
-                        {{-- Tombol Detail di tabel --}}
-                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalDetailHelm{{ $helm->id }}" title="Lihat Detail">
-                            <i class="ti ti-list"></i>
-                        </button>
+                            {{-- button form edit data --}}
+                            <a href="{{ route('helms.edit', $helm->id) }}" class="btn btn-primary btn-sm m-1" data-bs-tooltip="tooltip" data-bs-title="Edit">
+                                <i class="ti ti-edit"></i>
+                            </a>
+                            {{-- button modal hapus data --}}
+                            <button type="button" class="btn btn-danger btn-sm m-1" data-bs-toggle="modal" data-bs-target="#modalDelete{{ $helm->id }}" data-bs-tooltip="tooltip" data-bs-title="Delete"> 
+                                <i class="ti ti-trash"></i>
+                            </button>
 
-                        {{-- button modal hapus data --}}
-                        <button type="button" class="btn btn-danger btn-sm m-1" data-bs-toggle="modal" data-bs-target="#modalDelete{{ $helm->id }}" data-bs-tooltip="tooltip" data-bs-title="Delete"> 
-                            <i class="ti ti-trash"></i>
-                        </button>
+                            {{-- Tombol Detail di tabel --}}
+                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalDetailHelm{{ $helm->id }}" title="Lihat Detail">
+                                <i class="ti ti-list"></i>
+                            </button>
 
                             {{-- Modal Detail --}}
                             <div class="modal fade" id="modalDetailHelm{{ $helm->id }}" tabindex="-1" aria-labelledby="modalDetailLabelHelm{{ $helm->id }}" aria-hidden="true">
@@ -269,7 +270,7 @@
                                         <strong>Items:</strong>
                                         <ul class="mb-0">
                                             @foreach ($helm->helmitems as $item)
-                                            <li>{{ $item->nama_helm }} ({{ ucfirst(str_replace('_', ' ', $item->type_helm)) }})</li>
+                                                <li>{{ $item->nama_helm }} ({{ ucfirst(str_replace('_', ' ', $item->type_helm)) }})</li>
                                             @endforeach
                                         </ul>
                                     </div>
