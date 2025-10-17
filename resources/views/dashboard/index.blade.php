@@ -14,7 +14,7 @@
                 </h4>
                 <p class="lead-dashboard mb-4">Selamat bekerja, jangan lupa tetap teliti dan semangat ya!</p>
                 <div class="d-grid gap-3 d-md-flex justify-content-md-start">
-                    <a href="{{ route('transactions.index')}}" class="btn btn-primary py-2 px-4">
+                    <a href="{{ route('transactions.index') }}" class="btn btn-primary py-2 px-4">
                         Lihat Transaksi <i class="ti ti-chevron-right align-middle ms-2"></i>
                     </a>
                 </div>
@@ -71,17 +71,17 @@
 
 
     <div class="row mb-3">
-        {{-- menampilkan informasi jumlah data Category --}}
+        {{-- menampilkan informasi jumlah data Helm --}}
         <div class="col-lg-6 col-xl-3">
             <div class="bg-white rounded-2 shadow-sm p-4 mb-4">
                 <div class="d-flex align-items-center justify-content-start">
                     <div class="me-4">
-                        <i class="ti ti-category fs-1 bg-primary-2 text-white rounded-2 p-2"></i>
+                        <i class="ti ti-helmet fs-1 bg-primary-2 text-white rounded-2 p-2"></i>
                     </div>
                     <div>
-                        <p class="text-muted mb-1">Categories</p>
+                        <p class="text-muted mb-1">Helm</p>
                         {{-- tampilkan data --}}
-                        <h5 class="fw-bold mb-0">{{ $totalCategory }}</h5>
+                        <h5 class="fw-bold mb-0">{{ $totalHelm }}</h5>
                     </div>
                 </div>
             </div>

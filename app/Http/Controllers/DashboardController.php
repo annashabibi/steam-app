@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\HelmItem;
 use App\Models\Motor;
 use App\Models\Karyawan;
 use App\Models\Pengeluaran;
@@ -20,10 +21,10 @@ class DashboardController extends Controller
      */
     public function index(Request $request):View
     {
-         // menampilkan jumlah data Category
-         $totalCategory = Category::count();
          // menampilkan jumlah data Motor
          $totalMotor = Motor::count();
+         // menampilkan jumlah data Helm
+         $totalHelm = HelmItem::count();
          // menampilkan jumlah data Karyawan
          $totalKaryawan = Karyawan::count();
          // menampilkan jumlah data Transaksi
@@ -135,8 +136,8 @@ class DashboardController extends Controller
         ]];
 
         return view('dashboard.index', compact(
-            'totalCategory',
             'totalMotor',
+            'totalHelm',
             'totalKaryawan',
             'totalTransaction',
             'motorTransactions',
@@ -145,7 +146,7 @@ class DashboardController extends Controller
             'totals',
             'labels',
             'datasets',
-            'range' // dikirim ke view biar bisa tahu range aktif
+            'range'
         ));
 
     }

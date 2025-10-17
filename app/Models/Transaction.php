@@ -24,11 +24,14 @@ class Transaction extends Model
         'qr_url',
         'expiry_time',
         'qr_string',
+        'food_items',
     ];
 
     protected $casts = [
     'date' => 'datetime',
-];
+    'food_items' => 'array',
+    
+    ];
 
     /**
      * Get the motor that owns the transaction.

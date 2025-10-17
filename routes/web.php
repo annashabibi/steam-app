@@ -11,6 +11,7 @@ use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\GajiController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\HelmTransactionController;
+use App\Http\Controllers\FoodController;
 use Illuminate\Http\Request;
 
 // Jika belum login, langsung redirect ke login
@@ -23,25 +24,30 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Categories CRUD
+    // Categories
     Route::resource('categories', CategoryController::class)->except(['show']);
 
-    // Motors CRUD
+    // Motors
     Route::resource('motors', MotorController::class);
 
-    // Karyawan CRUD
+    // Karyawan
     Route::resource('karyawans', KaryawanController::class)->except(['show']);
     Route::post('/karyawans/{id}/status', [KaryawanController::class, 'status'])->name('karyawans.status');
 
-    // Transactions CRUD plus deleteAll
-    Route::resource('transactions', TransactionController::class);
+    // Food
+    Route::resource('food', FoodController::class);
 
-    // Pengeluaran CRUD plus deleteAll
+    // Transactions
+    Route::resource('transactions', TransactionController::class);
+    // Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('transactions.show');
+
+    // Pengeluaran
     Route::resource('pengeluaran', PengeluaranController::class);
 
     // Pendapatan index
     Route::get('/gaji', [GajiController::class, 'index'])->name('gaji.index');
     Route::get('/gaji/filter', [GajiController::class, 'filter'])->name('gaji.filter');
+    // Route::post('/gaji/store', [GajiController::class, 'store'])->name('gaji.store');
     Route::get('/gaji/print/{id}', [GajiController::class, 'printGaji'])->name('gaji.print');
 
 
@@ -63,13 +69,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/helms/{helm_transaction}/pay', [PaymentController::class, 'payHelm'])->name('helms.pay');
     Route::get('/helms/{id}/transaction', [HelmTransactionController::class, 'transaction'])->name('helms.transaction');
 });
-
-// Route::withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
-//     ->group(function () {
-//         Route::post('/payment/webhook', [PaymentController::class, 'webhook'])
-//             ->name('payment.webhook');
-//     });
-
 
 // Auth routes
 require __DIR__.'/auth.php';

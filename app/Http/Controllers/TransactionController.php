@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Karyawan;
 use App\Models\Motor;
 use App\Models\Transaction;
-use Midtrans\CoreApi;
-use Midtrans\Config;
+use App\Models\Food;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +26,7 @@ class TransactionController extends Controller
     // $today =  Carbon::parse('2025-08-14');
 
     // Base query
-    $query = Transaction::select('id', 'date', 'tip', 'total', 'payment_method', 'payment_status', 'qr_url', 'qr_string', 'expiry_time', 'midtrans_payment_type', 'karyawan_id', 'motor_id')
+    $query = Transaction::select('id', 'date', 'tip', 'food_items', 'total', 'payment_method', 'payment_status', 'qr_url', 'qr_string', 'expiry_time', 'midtrans_payment_type', 'karyawan_id', 'motor_id')
         ->with([
             'karyawan:id,nama_karyawan',
             'motor:id,nama_motor,harga'
@@ -55,10 +54,23 @@ class TransactionController extends Controller
 
 
         $totalKeseluruhan = Transaction::whereDate('date', $today)
-            ->whereNotIn('payment_status', ['pending', 'expired'])
-            ->with('motor')
-            ->get()
-            ->sum(fn($trx) => ($trx->motor->harga ?? 0) + $trx->tip);
+    ->whereNotIn('payment_status', ['pending', 'expired'])
+    ->with('motor')
+    ->get()
+    ->sum(function ($trx) {
+        $hargaMotor = $trx->motor->harga ?? 0;
+        $tip = $trx->tip ?? 0;
+        $foodTotal = 0;
+
+        if (!empty($trx->food_items) && is_array($trx->food_items)) {
+            foreach ($trx->food_items as $food) {
+                $foodTotal += ($food['harga'] ?? 0) * ($food['qty'] ?? 1);
+            }
+        }
+
+        return $hargaMotor + $tip + $foodTotal;
+    });
+
 
             return view('transactions.index', compact('transactions', 'totalKeseluruhan', 'today'))->with('i', ($request->input('page', 1) - 1) * $pagination);
 }
@@ -72,105 +84,100 @@ class TransactionController extends Controller
         $karyawans = Karyawan::where('aktif', true)->get(['id', 'nama_karyawan']);
         // get data motor
         $motors = Motor::get(['id', 'nama_motor', 'harga']);
+        // get data food
+        $foods = Food::all();
 
         // tampilkan form add data
-        return view('transactions.create', compact('karyawans', 'motors'));
+        return view('transactions.create', compact('karyawans', 'motors', 'foods'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse
-{
-    // Validasi form
-    $request->validate([
-        'date'           => 'required|date',
-        'karyawan'       => ['required',
-            Rule::exists('karyawans', 'id')->where(function ($query):void {
-                $query->where('aktif', true);
-            }),
-        ],
-        'motor'          => 'required|exists:motors,id',
-        'tip'            => 'nullable|numeric|min:0',
-        'total'          => 'required|numeric|min:0', // Pastikan total adalah angka
-        'payment_method' => 'required|in:cash,midtrans',
-    ]);
-
-    // Bersihkan angka untuk tip dan total (hilangkan titik sebagai pemisah ribuan)
-    $tip = str_replace('.', '', $request->tip ?? 0);
-    $total = str_replace('.', '', $request->total);
-
-    // dd($request->all());
-
-    // Buat data transaksi
-    $transaction = Transaction::create([
-        'date'            => $request->date,
-        'karyawan_id'     => $request->karyawan,
-        'motor_id'        => $request->motor,
-        'tip'             => $tip,
-        'total'           => $total,
-        'payment_method'  => $request->payment_method,
-        'payment_status'  => $request->payment_method === 'cash' ? 'paid' : 'pending',
-        // 'midtrans_payment_type' => null,
-        'midtrans_order_id' => $request->payment_method === 'midtrans' ? 'ORDER-' . Str::uuid() : null,
-    ]);
-
-    // Menangani payment_method 'cash' atau 'online'
-    if ($request->payment_method === 'cash') {
-        // Jika cash, langsung selesai
-        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil disimpan.');
-    } else {
-        // Jika online, lanjutkan ke Midtrans
-        return redirect()->route('midtrans.pay', $transaction->id);
-    }
-}
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
     {
-        // get data transaction by ID
-        $transaction = Transaction::findOrFail($id);
-        // get data karyawan
-        $karyawans = Karyawan::get(['id', 'nama_karyawan']);
-        // get data motor
-        $motors = Motor::get(['id', 'nama_motor', 'harga']);
-
-        // tampilkan form edit data
-        return view('transactions.edit', compact('transaction', 'karyawans', 'motors'));
-    }
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        // validasi form
+        // Validasi form
         $request->validate([
-            'date'     => 'required',
-            'karyawan' => 'required|exists:karyawans,id',
-            'motor'    => 'required|exists:motors,id',
-            'tip'      => 'nullable|numeric|min:0',
-            'total'    => 'required'
+            'date'           => 'required|date',
+            'karyawan'       => ['required',
+                Rule::exists('karyawans', 'id')->where(function ($query): void {
+                    $query->where('aktif', true);
+                }),
+            ],
+            'motor'          => 'required|exists:motors,id',
+            'tip'            => 'nullable|numeric|min:0',
+            'total'          => 'required|numeric|min:0',
+            'payment_method' => 'required|in:cash,midtrans',
+
+            // validasi opsional untuk makanan/minuman
+            'food_items'     => ['nullable', 'string'], // string JSON
         ]);
 
-        // get data by ID
-        $transaction = Transaction::findOrFail($id);
+        // Bersihkan angka untuk tip
+        $tip = str_replace('.', '', $request->tip ?? 0);
 
-        // update data
-        $transaction->update([
-            'date'        => $request->date,
-            'karyawan_id' => $request->karyawan,
-            'motor_id'    => $request->motor,
-            'tip'         => str_replace('.', '', $request->tip ?? 0),
-            'total'       => str_replace('.', '', $request->total)
+        // Ambil harga motor
+        $motor = Motor::findOrFail($request->motor);
+        $motorHarga = $motor->harga;
+
+        // Ambil data makanan jika ada
+        $foodItems = null;
+        $foodTotal = 0;
+
+        if ($request->filled('food_items')) {
+            $foodArray = json_decode($request->food_items, true); // decode JSON menjadi array
+
+            if (!empty($foodArray)) {
+                $foods = Food::whereIn('id', collect($foodArray)->pluck('id'))->get();
+
+                $foodItems = $foods->map(function ($food) use ($foodArray, &$foodTotal) {
+                    $qty = collect($foodArray)
+                        ->firstWhere('id', $food->id)['qty'] ?? 1;
+
+                    // Hitung total makanan
+                    $foodTotal += $food->harga * $qty;
+
+                    return [
+                        'id' => $food->id,
+                        'nama_produk' => $food->nama_produk,
+                        'harga' => $food->harga,
+                        'qty' => $qty,
+                    ];
+                })->toArray();
+            }
+        }
+
+        // Hitung total keseluruhan (motor + tip + makanan)
+        $total = $motorHarga + $tip + $foodTotal;
+
+        // Buat data transaksi
+        $transaction = Transaction::create([
+            'date'            => $request->date,
+            'karyawan_id'     => $request->karyawan,
+            'motor_id'        => $request->motor,
+            'tip'             => $tip,
+            'total'           => $total,
+            'payment_method'  => $request->payment_method,
+            'payment_status'  => $request->payment_method === 'cash' ? 'paid' : 'pending',
+            'midtrans_order_id' => $request->payment_method === 'midtrans' ? 'ORDER-' . Str::uuid() : null,
+            'food_items'      => $foodItems ? json_encode($foodItems) : null,
         ]);
 
-        // redirect ke halaman index dan tampilkan pesan berhasil ubah data
-        return redirect()->route('transactions.index')->with(['success' => 'The transaction has been updated.']);
+        // Kurangi stok makanan jika ada
+        if (!empty($foodItems)) {
+            foreach ($foodItems as $item) {
+                Food::where('id', $item['id'])->decrement('qty', $item['qty']);
+            }
+        }
+
+        // Redirect sesuai payment method
+        if ($request->payment_method === 'cash') {
+            return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil disimpan.');
+        } else {
+            return redirect()->route('midtrans.pay', $transaction->id);
+        }
     }
-
+    
     /**
      * Remove the specified resource from storage.
      */
@@ -185,21 +192,6 @@ class TransactionController extends Controller
         // redirect ke halaman index dan tampilkan pesan berhasil hapus data
         return redirect()->route('transactions.index')->with(['success' => 'The transaction has been deleted!']);
     }
-
-    // public function deleteAll()
-    // {
-    //     // Menghapus semua transaksi
-    //     Transaction::truncate();
-
-    //     return redirect()->route('transactions.index')->with('success', 'All transactions have been deleted.');
-    // }
-    
-    public function show($id)
-{
-    $transaction = Transaction::with('karyawan', 'motor')->findOrFail($id);
-
-    return view('transactions.show', compact('transaction'));
-}
 
 
    public function transaction($id)

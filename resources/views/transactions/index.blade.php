@@ -30,14 +30,15 @@
                 <thead>
                     <tr>
                         <th class="text-center">No.</th>
-                        <th class="text-center">Date</th>
+                        <th class="text-center">Tanggal</th>
                         <th class="text-center">Karyawan</th>
                         <th class="text-center">Motor</th>
                         <th class="text-center">Harga</th>
                         <th class="text-center">Tip</th>
+                        <th class="text-center">F&B</th>
                         <th class="text-center">Total</th>
-                        <th class="text-center">Pembayaran</th>
                         <th class="text-center">Status</th>
+                        <th class="text-center">Pembayaran</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -48,19 +49,40 @@
                             <td>{{ date('F j, Y', strtotime($transaction->date)) }}</td>
                             <td>{{ $transaction->karyawan->nama_karyawan }}</td>
                             <td>{{ $transaction->motor->nama_motor }}</td>
-                            <td class="text-end">{{ 'Rp ' . number_format($transaction->motor->harga, 0, '', '.') }}</td>
+                            <td class="text-end">{{ 'Rp' . number_format($transaction->motor->harga, 0, '', '.') }}</td>
                             <td class="text-center">{{ number_format($transaction->tip, 0, '', '.') }}</td>
-                            <td class="text-end">{{ 'Rp ' . number_format($transaction->motor->harga + $transaction->tip, 0, '', '.') }}</td>
                             <td class="text-center">
-                                @if ($transaction->payment_method === 'midtrans')
-                                    {{ ucfirst($transaction->midtrans_payment_type ?? 'Midtrans') }}
-                                @elseif ($transaction->payment_method === 'cash')
-                                    Cash
+                                @if (!empty($transaction->food_items))
+                                    @php
+                                        $foodItems = json_decode($transaction->food_items, true);
+                                    @endphp
+
+                                    @if (!empty($foodItems))
+                                        <ul class="list-unstyled mb-0">
+                                            @foreach ($foodItems as $item)
+                                                <li>
+                                                    {{ $item['nama_produk'] }} (x{{ $item['qty'] }})<br>
+                                                    Rp{{ number_format($item['qty'] * $item['harga'], 0, ',', '.') }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        -
+                                    @endif
                                 @else
-                                    {{ ucfirst($transaction->payment_method ?? '-') }}
+                                    -
                                 @endif
                             </td>
-                            {{-- <td class="text-center">{{ ucfirst($transaction->payment_status ?? 'Paid') }}</td> --}}
+
+                            {{-- <td class="text-end">{{ 'Rp ' . number_format($transaction->motor->harga + $transaction->tip, 0, '', '.') }}</td> --}}
+                            <td class="text-end">
+                                {{ 'Rp' . number_format(
+                                    ($transaction->motor->harga ?? 0) 
+                                    + ($transaction->tip ?? 0) 
+                                    + array_sum(array_map(fn($f) => ($f['harga'] ?? 0) * ($f['qty'] ?? 1), json_decode($transaction->food_items ?? '[]', true))),
+                                    0, '', '.'
+                                ) }}
+                            </td>
                             @php
                             $status = $transaction->payment_status ?? 'paid';
                             $class = match($status) {
@@ -74,15 +96,23 @@
                                 <span class="badge {{ $class }}">{{ ucfirst($status) }}</span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('transactions.edit', $transaction->id) }}" class="btn btn-primary btn-sm m-1" title="Edit Transaksi">
-                                    <i class="ti ti-edit"></i>
-                                </a>
-                                <button type="button" class="btn btn-danger btn-sm m-1" data-bs-toggle="modal" title="Hapus" data-bs-target="#modalDelete{{ $transaction->id }}">
-                                    <i class="ti ti-trash"></i>
-                                </button>
+                                @if ($transaction->payment_method === 'midtrans')
+                                    {{ ucfirst($transaction->midtrans_payment_type ?? 'Midtrans') }}
+                                @elseif ($transaction->payment_method === 'cash')
+                                    Cash
+                                @else
+                                    {{ ucfirst($transaction->payment_method ?? '-') }}
+                                @endif
+                            </td>
+                            {{-- <td class="text-center">{{ ucfirst($transaction->payment_status ?? 'Paid') }}</td> --}}
+                            <td class="text-center">
                                 {{-- Tombol Detail di tabel --}}
                                 <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalDetail{{ $transaction->id }}" title="Lihat Detail">
                                     <i class="ti ti-list"></i>
+                                </button>
+                                {{-- Tombol Delete --}}
+                                <button type="button" class="btn btn-danger btn-sm m-1" data-bs-toggle="modal" title="Hapus" data-bs-target="#modalDelete{{ $transaction->id }}">
+                                    <i class="ti ti-trash"></i>
                                 </button>
 
                                 {{-- Modal Detail --}}
@@ -132,7 +162,7 @@
                                     <div class="text-center my-3">
                                         {!! QrCode::size(250)->generate($transaction->qr_string) !!}
                                         <p class="small text-muted mt-2">
-                                            <div>
+                                            <div class="mt-2">
                                                 <div class="countdown" data-expired="{{ $transaction->expiry_time }}" id="countdown{{ $transaction->id }}"></div>
                                             </div>
                                         </p>
@@ -172,6 +202,33 @@
                                             </tr>
                                             <tr>
                                                 <td class="text-start fw-semibold text-muted">
+                                                    <i class="ti ti-cup me-2"></i>F&B
+                                                </td>
+                                                <td class="text-end">
+                                                    @if (!empty($transaction->food_items))
+                                                        @php
+                                                            $foodItems = json_decode($transaction->food_items, true);
+                                                        @endphp
+
+                                                        @if (!empty($foodItems))
+                                                            <ul class="list-unstyled mb-0">
+                                                                @foreach ($foodItems as $item)
+                                                                    <li>
+                                                                        {{ $item['nama_produk'] }} (x{{ $item['qty'] }})<br>
+                                                                        Rp{{ number_format($item['qty'] * $item['harga'], 0, ',', '.') }}
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-start fw-semibold text-muted">
                                                     <i class="ti ti-credit-card me-2"></i>Metode Pembayaran
                                                 </td>
                                                 <td class="text-end">
@@ -188,8 +245,24 @@
                                                 <td class="text-start fw-bold text-primary">
                                                     <i class="ti ti-calculator me-2"></i>Total
                                                 </td>
+                                                @php
+                                                    $motorHarga = $transaction->motor->harga ?? 0;
+                                                    $tip = $transaction->tip ?? 0;
+                                                    $foodTotal = 0;
+
+                                                    $foodItems = !empty($transaction->food_items) ? json_decode($transaction->food_items, true) : [];
+
+                                                    if (!empty($foodItems) && is_array($foodItems)) {
+                                                        foreach ($foodItems as $item) {
+                                                            $foodTotal += ($item['harga'] ?? 0) * ($item['qty'] ?? 1);
+                                                        }
+                                                    }
+
+                                                    $totalKeseluruhan = $motorHarga + $tip + $foodTotal;
+                                                @endphp
+
                                                 <td class="text-end fw-bold text-primary fs-5">
-                                                    Rp {{ number_format(($transaction->motor->harga ?? 0) + ($transaction->tip ?? 0), 0, ',', '.') }}
+                                                    Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -212,15 +285,26 @@
                     </div>
                 </div>
 
-                        <div class="modal-footer border-0 bg-light">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                Tutup
+                    <div class="modal-footer border-0 bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Tutup
+                        </button>
+
+                        <button type="button" class="btn btn-warning" onclick="printTransaksi({{ $transaction->id }})" @if(!in_array($transaction->payment_status, ['paid','settlement','capture'])) disabled @endif>
+                            <i class="ti ti-printer me-1"></i> Cetak
+                        </button>
+
+                        @if($transaction->payment_method === 'midtrans' && !in_array($transaction->payment_status, ['paid','settlement','capture', 'expired']))
+                            <button class="refresh-button checkStatusBtn" id="checkStatusBtn{{ $transaction->id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" class="svg-icon">
+                                    <path stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                                        d="M3 12a9 9 0 1 0 3-6.708M3 3v4h4"/>
+                                </svg>
+                                <span class="label">Cek Status</span>
                             </button>
-                            <button type="button" class="btn btn-warning" onclick="printTransaksi({{ $transaction->id }})"
-                                @if(!in_array($transaction->payment_status, ['paid','settlement','capture'])) disabled @endif>
-                                <i class="ti ti-printer me-1"></i> Cetak
-                            </button>
-                        </div>
+                        @endif
+                    </div>
+
                     </div>
                 </div>
             </div>
@@ -249,7 +333,7 @@
                         </div>
                     @empty
                         <tr>
-                            <td colspan="10">
+                            <td colspan="11">
                                 <div class="d-flex justify-content-center align-items-center">
                                     <i class="ti ti-info-circle fs-5 me-2"></i>
                                     <span>No data available.</span>
@@ -261,9 +345,9 @@
                 <tfoot>
                     @if ($transactions->currentPage() == $transactions->lastPage())
                         <tr>
-                            <td colspan="8" class="text-end"><strong>Total Keseluruhan</strong></td>
-                            <td class="text-end"><strong>{{ 'Rp ' . number_format($totalKeseluruhan, 0, '', '.') }}</strong></td>
-                            <td colspan="3"></td>
+                            <td colspan="9" class="text-end"><strong>Total Keseluruhan</strong></td>
+                            <td class="text-end"><strong>{{ 'Rp' . number_format($totalKeseluruhan, 0, '', '.') }}</strong></td>
+                            <td></td>
                         </tr>
                     @endif
                 </tfoot>
@@ -291,11 +375,88 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            el.innerHTML = `⏱️ Sisa waktu: ${minutes}m ${seconds}s`;
+            el.innerHTML = `Sisa waktu: ${minutes}m ${seconds}s`;
             el.classList.add("countdown-red");
         }, 1000);
     });
 });
+
+// Check Status
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".checkStatusBtn").forEach(function(btn) {
+        const transactionId = btn.id.replace('checkStatusBtn','');
+
+        // manual click
+        btn.addEventListener('click', function() {
+            checkPaymentStatus(transactionId, true);
+        });
+    });
+});
+
+function checkPaymentStatus(transactionId, isManualCheck = false) {
+    const checkBtn = document.getElementById("checkStatusBtn" + transactionId);
+    const label = checkBtn.querySelector(".label");
+
+    checkBtn.disabled = true;
+    label.textContent = "Memeriksa...";
+
+    fetch(`/payment/${transactionId}/status`)
+        .then(response => response.json())
+        .then(data => {
+            if(['paid','settlement','capture'].includes(data.status)) {
+                checkBtn.remove();
+                const badge = document.querySelector(`#modalDetail${transactionId} .badge`);
+                if(badge) {
+                    badge.textContent = 'Paid';
+                    badge.className = 'badge bg-success';
+                }
+
+                if(isManualCheck) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pembayaran Lunas',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            } else if(data.status === 'pending') {
+                if(isManualCheck) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Pembayaran Pending',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+                checkBtn.disabled = false;
+                label.textContent = "Cek Status";
+            } else {
+                if(isManualCheck) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pembayaran Gagal',
+                        text: `Status: ${data.status}`,
+                        showConfirmButton: true
+                    });
+                }
+                checkBtn.disabled = false;
+                label.textContent = "Cek Status";
+            }
+        })
+        .catch(err => {
+            if(isManualCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Gagal Cek Status',
+                    text: 'Terjadi kesalahan. Silakan coba lagi.',
+                    showConfirmButton: true
+                });
+            }
+            checkBtn.disabled = false;
+            label.textContent = "Cek Status";
+            console.error(err);
+        });
+}
 
 // Global function print
 function printTransaksi(id) {

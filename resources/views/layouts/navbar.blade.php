@@ -6,11 +6,6 @@
             <span class=" brand-logo-text fs-4">Steam Gue Gbyuur</span>
         </a>
 
-        {{-- Logo --}}
-        {{-- <a class="navbar-brand" href="{{ route('dashboard') }}">
-            <img src="{{ asset('images/logo.png') }}" alt="Steam Gue Gbyuur" height="40">
-        </a> --}}
-
         {{-- Tombol Hamburger --}}
         <label class="burger d-lg-none" for="burger">
         <input type="checkbox" id="burger">
@@ -50,6 +45,11 @@
                     <li class="nav-item">
                         <x-navbar-link href="{{ route('karyawans.index') }}" :active="request()->routeIs('karyawans.*')">
                             <i class="ti ti-users align-text-top me-1"></i> Karyawan
+                        </x-navbar-link>
+                    </li>
+                    <li class="nav-item">
+                        <x-navbar-link href="{{ route('food.index') }}" :active="request()->routeIs('food.*')">
+                            <i class="ti ti-cup align-text-top me-1"></i> F&B
                         </x-navbar-link>
                     </li>
                     <li class="nav-item">
