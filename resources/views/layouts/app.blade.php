@@ -84,7 +84,9 @@
     <script src="{{ asset('js/plugins.js') }}"></script>
     {{-- <script src="https://802b-103-121-17-123.ngrok-free.app/js/plugins.js"></script> --}}
     <script src="{{ asset('js/image-preview.js') }}"></script>
-    
+
+    {{-- Any Chart --}}
+    <script src="https://cdn.anychart.com/releases/8.13.0/js/anychart-base.min.js" type="text/javascript"></script>
 
     <script>
     document.getElementById('burger').addEventListener('change', function() {
@@ -95,21 +97,6 @@
             bootstrap.Collapse.getInstance(navbar)?.hide();
         }
     });
-
-    function showLoader() {
-    document.getElementById('global-loader').classList.remove('hidden');
-  }
-
-  function hideLoader() {
-    document.getElementById('global-loader').classList.add('hidden');
-  }
-
-  // Otomatis muncul saat mulai load
-  document.addEventListener('DOMContentLoaded', showLoader);
-
-  // Hilang setelah halaman selesai dimuat
-  window.addEventListener('load', hideLoader);
-
         // sweetalert
         @if (session('success'))
             Swal.fire({
