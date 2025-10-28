@@ -38,20 +38,18 @@
     </div>
     </div>
 
-    <script>
+<script>
     document.addEventListener('DOMContentLoaded', function () {
-        const loader = document.getElementById('global-loader');
+    const loader = document.getElementById('global-loader');
 
         @if (session('login'))
             loader.style.display = 'none';
             return;
         @endif
 
-        // Loader otomatis muncul saat DOM pertama kali dimuat
         loader.style.display = 'flex';
         loader.style.opacity = '1';
 
-        // Setelah semua resource selesai dimuat
         window.addEventListener('load', () => {
             setTimeout(() => {
                 loader.style.opacity = '0';
@@ -59,32 +57,35 @@
                 setTimeout(() => {
                     loader.style.display = 'none';
                 }, 500);
-            }, 500);
+            }, 300);
         });
 
-        // Tangkap semua klik pada link navigasi
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
-            
-            // Cek apakah yang diklik adalah link internal (bukan external atau #)
             if (link && link.href && 
                 link.href.startsWith(window.location.origin) && 
                 !link.hasAttribute('target') &&
                 !link.href.includes('#')) {
                 
-                // Tampilkan loader
                 loader.style.display = 'flex';
                 loader.style.opacity = '1';
                 loader.style.transition = 'none';
             }
         });
 
-        // TAMBAHAN: Tangkap semua submit form
         document.addEventListener('submit', function(e) {
-            // Tampilkan loader saat form disubmit
             loader.style.display = 'flex';
             loader.style.opacity = '1';
             loader.style.transition = 'none';
         });
+    });
+
+    // loader hilang saat kembali dari cache
+    window.addEventListener('pageshow', function(event) {
+        const loader = document.getElementById('global-loader');
+        if (event.persisted) {
+            loader.style.display = 'none';
+            loader.style.opacity = '0';
+        }
     });
 </script>

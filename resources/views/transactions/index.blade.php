@@ -1,13 +1,13 @@
 <x-app-layout>
     {{-- Page Title --}}
-    <x-page-title>Transaksi ({{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }})</x-page-title>
+    <x-page-title>Transaksi {{ $today->translatedFormat('l, j F Y') }}</x-page-title>
 
     <div class="bg-white rounded-2 shadow-sm p-4 mb-4">
         <div class="row">
             <div class="d-grid d-lg-block col-lg-5 col-xl-6 mb-4 mb-lg-0">
                 {{-- Add Transaction --}}
                 <a href="{{ route('transactions.create') }}" class="btn btn-primary py-2 px-3">
-                    <i class="ti ti-plus me-2"></i> Add Transaction
+                    <i class="ti ti-plus me-2"></i> Tambah Transaksi
                 </a>
 
                 {{-- Modal Search --}}
@@ -51,7 +51,7 @@
                             <td>{{ $transaction->motor->nama_motor }}</td>
                             <td class="text-end">{{ 'Rp' . number_format($transaction->motor->harga, 0, '', '.') }}</td>
                             <td class="text-center">{{ number_format($transaction->tip, 0, '', '.') }}</td>
-                            <td class="text-center">
+                            <td class="text-start">
                                 @if (!empty($transaction->food_items))
                                     @php
                                         $foodItems = json_decode($transaction->food_items, true);
@@ -343,13 +343,11 @@
                     @endforelse
                 </tbody>
                 <tfoot>
-                    @if ($transactions->currentPage() == $transactions->lastPage())
-                        <tr>
-                            <td colspan="9" class="text-end"><strong>Total Keseluruhan</strong></td>
-                            <td class="text-end"><strong>{{ 'Rp' . number_format($totalKeseluruhan, 0, '', '.') }}</strong></td>
-                            <td></td>
-                        </tr>
-                    @endif
+                    <tr>
+                        <td colspan="9" class="text-end"><strong>Total Keseluruhan</strong></td>
+                        <td class="text-end"><strong>{{ 'Rp' . number_format($totalTransaksi, 0, '', '.') }}</strong></td>
+                        <td></td>
+                    </tr>
                 </tfoot>
             </table>
         </div>

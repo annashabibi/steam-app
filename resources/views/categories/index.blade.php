@@ -7,7 +7,7 @@
             <div class="d-grid d-lg-block col-lg-5 col-xl-6 mb-4 mb-lg-0">
                 {{-- button form add data --}}
                 <a href="{{ route('categories.create') }}" class="btn btn-primary py-2 px-3">
-                    <i class="ti ti-plus me-2"></i> Add Category
+                    <i class="ti ti-plus me-2"></i> Tambah Category
                 </a>
             </div>
             <div class="col-lg-7 col-xl-6">

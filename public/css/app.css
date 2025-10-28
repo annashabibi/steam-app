@@ -971,9 +971,6 @@ hr {
     color: #dc3545 !important;
 }
 
-/* Loaders */
-
-
 /*Hamburger Menu*/
 .burger {
   position: relative;
@@ -1078,8 +1075,7 @@ hr {
   font-size: 14px;
 }
 
-/* From Uiverse.io by Subaashbala */ 
-/* Prior to using this loader, please ensure that you have set a background image or background color, as the text is transparent and not designed with a solid color. */
+/* Loader Animasi */
 .loader {
   --ANIMATION-DELAY-MULTIPLIER: 70ms;
   padding: 0;
@@ -1135,12 +1131,11 @@ hr {
   }
 }
 
-/* FIX posisi loader agar di tengah layar */
 #global-loader {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.2); /* 0.2 = 20% putih, bisa ubah sesuka kamu */
-  backdrop-filter: blur(4px); /* opsional: kasih efek blur */
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1148,7 +1143,214 @@ hr {
   transition: opacity 0.5s ease;
 }
 
-
 .hidden {
   display: none;
+}
+
+.anychart-credits {
+   display: none;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes expandWidth {
+    from { width: 0%; }
+}
+
+.menu-card {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    padding: 1.5rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-bg-accent {
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(30, 144, 255, 0.03) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.menu-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.menu-title {
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.menu-wrapper {
+    margin-bottom: 1rem;
+    position: relative;
+    animation: fadeSlideIn 0.4s ease-out both;
+}
+
+.menu-item {
+    cursor: pointer;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    position: relative;
+    background-color: #fafafa;
+    border: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.menu-rank {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    width: 32px;
+    height: 32px;
+    color: white;
+    border-radius: 0 0 12px 0;
+    font-size: 15px;
+}
+
+.menu-rank-top {
+    background-color: #FF8C00;
+    box-shadow: 0 2px 8px rgba(30, 144, 255, 0.2);
+}
+
+.menu-rank-default {
+    background-color: #94a3b8;
+    box-shadow: 0 2px 8px rgba(30, 144, 255, 0.2);
+}
+
+.menu-image-wrapper {
+    width: 85px;
+    height: 85px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #f1f5f9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.menu-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.menu-item:hover .menu-image {
+    transform: scale(1.05);
+}
+
+.menu-badge-position {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+}
+
+.menu-badge-star {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: #fbbf24;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
+
+.menu-icon-star {
+    font-size: 12px;
+}
+
+.menu-product-name {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+    line-height: 1.4;
+}
+
+.menu-badge-sold {
+    background-color: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    padding: 4px 10px;
+    font-weight: 500;
+    border-radius: 50rem;
+}
+
+.menu-icon-cart {
+    font-size: 11px;
+}
+
+.menu-revenue-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.menu-revenue-label {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.menu-revenue-value {
+    font-size: 14px;
+    color: #1e293b;
+    letter-spacing: -0.3px;
+}
+
+.menu-empty {
+    text-align: center;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.menu-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    background-color: #f8fafc;
+    border: 2px solid #f1f5f9;
+}
+
+.menu-icon-empty {
+    font-size: 32px;
+    color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+    .menu-item:hover {
+        transform: translateY(-1px);
+    }
 }

@@ -1,13 +1,13 @@
 <x-app-layout>
     {{-- Page Title --}}
-    <x-page-title>Motors</x-page-title>
+    <x-page-title>Motor</x-page-title>
 
     <div class="bg-white rounded-2 shadow-sm p-4 mb-4">
         <div class="row">
             <div class="d-grid d-lg-block col-lg-5 col-xl-6 mb-4 mb-lg-0">
                 {{-- button form add data --}}
                 <a href="{{ route('motors.create') }}" class="btn btn-primary py-2 px-3">
-                    <i class="ti ti-plus me-2"></i> Add motor
+                    <i class="ti ti-plus me-2"></i> Tambah motor
                 </a>
             </div>
             <div class="col-lg-7 col-xl-6">

@@ -32,6 +32,7 @@
         .text-danger { color: #dc3545; font-weight: bold; }
         .text-success { color: #198754; font-weight: bold; }
         .text-end { text-align: right; }
+        .text-start { text-align: left; }
         .fw-bold { font-weight: bold; }
     </style>
 </head>
@@ -52,6 +53,7 @@
                 <th>Karyawan</th>
                 <th>Motor</th>
                 <th>Harga</th>
+                <th>F&B</th>
                 <th>Tip</th>
                 <th>Total</th>
             </tr>
@@ -60,19 +62,36 @@
             @foreach ($transactions as $transaction)
                 <tr style="text-align: center;">
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ date('d-m-Y', strtotime($transaction->date)) }}</td>
+                    <td>{{ $date->translatedFormat('l, d F Y') }}</td>
                     <td>{{ $transaction->karyawan->nama_karyawan }}</td>
                     <td>{{ $transaction->motor->nama_motor }}</td>
-                    <td>Rp {{ number_format($transaction->motor->harga, 0, ',', '.') }}</td>
-                    <td>Rp {{ number_format($transaction->tip, 0, ',', '.') }}</td>
-                    <td>Rp {{ number_format($transaction->motor->harga + $transaction->tip, 0, ',', '.') }}</td>
+                    <td>Rp{{ number_format($transaction->motor->harga, 0, ',', '.') }}</td>
+                    <td class="text-start">
+                        @if (!empty($transaction->food_items))
+                            @php
+                                $foodItems = json_decode($transaction->food_items, true);
+                            @endphp
+
+                            @if (!empty($foodItems))
+                                @foreach ($foodItems as $item)
+                                    {{ $item['nama_produk'] }} (x{{ $item['qty'] }}): Rp{{ number_format($item['qty'] * $item['harga'], 0, ',', '.') }}<br>
+                                @endforeach
+                            @else
+                                -
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>Rp{{ number_format($transaction->tip, 0, ',', '.') }}</td>
+                    <td>Rp{{ number_format($transaction->total, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="6" style="text-align: right; font-weight: bold;">Total Keseluruhan</td>
-                <td style="font-weight: bold;">Rp{{ number_format($totalKeseluruhan ?? 0, 0, ',', '.') }}</td>
+                <td colspan="7" style="text-align: right; font-weight: bold;">Total Keseluruhan</td>
+                <td style="font-weight: bold;">Rp{{ number_format(($totalKeseluruhan ?? 0) + ($totalFnbTransaksi ?? 0), 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>    
@@ -128,6 +147,7 @@
                 <thead class="bg-secondary">
                     <tr>
                         <th>Total Uang Steam</th>
+                        <th>Total F&B</th>
                         <th>Uang Makan</th>
                         <th>Token</th>
                         <th>Uang Sampah</th>
@@ -138,7 +158,8 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Rp{{ number_format($totalUangSteamHariItu, 0, ',', '.') }}</td>
+                        <td>Rp{{ number_format($totalUangSteamSaja, 0, ',', '.') }}</td>
+                        <td>Rp{{ number_format($totalFnbHariItu, 0, ',', '.') }}</td>
                         <td>Rp{{ number_format($pengeluaranMakan, 0, ',', '.') }}</td>
                         <td>Rp{{ number_format($pengeluaranToken, 0, ',', '.') }}</td>
                         <td>Rp{{ number_format($pengeluaranSampah, 0, ',', '.') }}</td>
@@ -147,17 +168,17 @@
                         <td class="text-danger fw-bold">Rp{{ number_format($totalPengeluaranHariItu, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-bold text-dark">Jumlah</td>
+                        <td colspan="7" class="text-end fw-bold text-dark">Jumlah</td>
                         <td class="fw-bold text-dark">Rp{{ number_format($jumlahBersihHariItu, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-bold">Total Pendapatan Bersih</td>
-                        <td class="text-success">Rp{{ number_format($totalPendapatanPemilik - ($pengeluaranToken + $pengeluaranSampah + $pengeluaranAir + $pengeluaranSabun + $pengeluaranMakan), 0, ',', '.') }}</td>
+                        <td colspan="7" class="text-end fw-bold">Total Pendapatan Bersih</td>
+                        <td class="text-success">Rp{{ number_format(($totalPendapatanPemilik - ($pengeluaranToken + $pengeluaranSampah + $pengeluaranAir + $pengeluaranSabun + $pengeluaranMakan)) + $totalFnbHariItu, 0, ',', '.') }}</td>
                     </tr>
                 </tbody>
             </table>
         @endif
 
-    <div style="margin-top: 25px; text-align: right">Depok, {{ $date->translatedFormat('F j, Y', strtotime($date)) }}</div>
+    <div style="margin-top: 25px; text-align: right">Depok, {{ $date->translatedFormat('l d F Y') }}</div>
 </body>
 </html>

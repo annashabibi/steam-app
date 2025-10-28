@@ -20,7 +20,7 @@ class FoodController extends Controller
         if ($request->search) {
             // menampilkan pencarian data
             $foods = Food::select('id', 'nama_produk', 'category', 'image', 'qty', 'harga')
-                ->whereAny(['nama_produk', 'category', 'harga'], 'LIKE', '%' . $request->search . '%')
+                ->where(['nama_produk', 'category', 'harga'], 'LIKE', '%' . $request->search . '%')
                 ->paginate($pagination)
                 ->withQueryString();
         } else {
@@ -155,6 +155,11 @@ class FoodController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        
+        $food = Food::findOrFail($id);
+        $food->delete();
+
+        // redirect
+        return redirect()->route('food.index')->with(['success' => 'Produk berhasil dihapus.']);
     }
 }

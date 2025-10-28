@@ -14,8 +14,8 @@
                 </h4>
                 <p class="lead-dashboard mb-4">Selamat bekerja, jangan lupa tetap teliti dan semangat ya!</p>
                 <div class="d-grid gap-3 d-md-flex justify-content-md-start">
-                    <a href="{{ route('transactions.index') }}" class="btn btn-primary py-2 px-4">
-                        Lihat Transaksi <i class="ti ti-chevron-right align-middle ms-2"></i>
+                    <a href="#" class="btn btn-primary py-2 px-4">
+                        Show Income <i class="ti ti-chevron-right align-middle ms-2"></i>
                     </a>
                 </div>
             </div>
@@ -24,7 +24,7 @@
 
    {{-- Chart Pendapatan --}}
     <div class="row">
-        {{-- Chart Pendapatan Pemilik --}}
+        {{-- Chart Pendapatan Pemilik (Motor) --}}
         <div class="col-12">
             <div class="bg-white rounded-2 shadow-sm p-4 mb-5" id="income-chart-container">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -66,9 +66,122 @@
                 </div>
             </div>
         </div>
+
+        {{-- Chart F&B --}}
+        <div class="col-12 col-lg-8">
+        <div class="bg-white rounded-2 shadow-sm p-4 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="mb-0 d-flex align-items-center">
+                    <i class="ti ti-chart-bar fs-5 align-text-top me-1"></i>
+                    Pendapatan F&B
+                    @if($range == '7') (7 Hari Terakhir) 
+                    @elseif($range == '30') (30 Hari Terakhir) 
+                    @else (Bulanan) 
+                    @endif
+                </h6>
+
+                <div class="text-end">
+                    <small class="text-muted">Total: </small>
+                    <span class="fw-bold" style="color: #FF8C00;">
+                        Rp{{ number_format($totalFnbRevenue, 0, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+
+            <div id="fnbChart" style="height: 350px; width: 100%;"></div>
+
+            {{-- Summary Info --}}
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-6 text-center">
+                    <small class="text-muted d-block">Total Transaksi: {{ $totalFnbTransactions }}</small>
+                    {{-- <h5 class="fw-bold mb-0">{{ $totalFnbTransactions }}</h5> --}}
+                </div>
+                <div class="col-6 text-center">
+                    <small class="text-muted d-block">Total Product Terjual: {{ $totalFnbItems }}</small>
+                    {{-- <h5 class="fw-bold mb-0">{{ $totalFnbItems }}</h5> --}}
+                </div>
+            </div>
+        </div>
     </div>
 
+    {{-- Top 5 Products F&B --}}
+    <div class="col-12 col-lg-4">
+        <div class="menu-card">
+            <div class="menu-bg-accent"></div>
+            
+            <div class="menu-header">
+                <h6 class="menu-title">
+                    Top 5 Product Teratas Hari Ini
+                </h6>
+            </div>
 
+            @forelse($topProducts as $index => $product)
+            
+            <div class="menu-wrapper" style="animation-delay: {{ $index * 0.08 }}s;">
+                <div class="menu-item">
+                    
+                    <div class="menu-rank {{ $index < 3 ? 'menu-rank-top' : 'menu-rank-default' }}">
+                        {{ $index + 1 }}
+                    </div>
+
+                    <div class="row g-3 align-items-center">
+                        
+                        <div class="col-auto ms-4">
+                            <div class="position-relative">
+                                <div class="menu-image-wrapper">
+                                    <img src="{{ $product['image'] }}" alt="{{ $product['nama_produk'] }}" class="menu-image">
+                                </div>
+                                
+                                @if($index === 0)
+                                <div class="menu-badge-position">
+                                    <div class="menu-badge-star">
+                                        <i class="ti ti-star-filled text-white menu-icon-star"></i>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <div class="mb-2">
+                                <h6 class="menu-product-name">
+                                    {{ $product['nama_produk'] }}
+                                </h6>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="menu-badge-sold">
+                                        <i class="ti ti-package menu-icon-cart"></i> {{ $product['qty'] }} terjual
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="menu-revenue-row">
+                                    <span class="menu-revenue-label">Pendapatan</span>
+                                    <strong class="menu-revenue-value">
+                                        Rp{{ number_format($product['revenue'], 0, ',', '.') }}
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="menu-empty">
+                <div class="mb-3">
+                    <div class="menu-empty-icon">
+                        <i class="ti ti-package-off menu-icon-empty"></i>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center align-items-center">
+                    <span>No data available.</span>
+                </div>
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    </div>
 
     <div class="row mb-3">
         {{-- menampilkan informasi jumlah data Helm --}}
@@ -116,7 +229,7 @@
                 </div>
             </div>
         </div>
-        {{-- menampilkan informasi jumlah data Transaction --}}
+        {{-- menampilkan informasi jumlah data Transaksi --}}
         <div class="col-lg-6 col-xl-3">
             <div class="bg-white rounded-2 shadow-sm p-4 p-lg-4-2 mb-4">
                 <div class="d-flex align-items-center justify-content-start">
@@ -156,11 +269,10 @@
                     {{-- jika data ada, tampilkan data --}}
                     <tr class="text-center">
                         <td width="50" class="text-center">
-                            <img src="{{ asset('/storage/motors/'.$transaction->motor->image) }}" class="img-thumbnail rounded-4" width="80" alt="Images">
+                            <img src="{{ $motor->image }}" class="img-thumbnail rounded-4" width="80" alt="Images">
                         </td>
                         <td width="200">{{ $transaction->motor->nama_motor }}</td>
                         <td width="100" class="text-end-center">{{ 'Rp ' . number_format($transaction->motor->harga, 0, '', '.') }}</td> 
-                        {{-- <td width="80" class="text-center">{{ $transaction->total_washes }}</td> --}}
                         <td width="80" class="text-center">{{ $transaction->total_washes ?? 0 }}</td>
                     </tr>
                 @empty
@@ -182,10 +294,16 @@
 
 {{-- Script ChartJS --}}
 <script>
+    // Data Motor Chart
     const dates = {!! json_encode($dates) !!};
     const incomes = {!! json_encode($incomes) !!};
     const totals = {!! json_encode($totals) !!};
 
+    // Data F&B Chart
+    const fnbIncomes = {!! json_encode($fnbIncomes) !!};
+    const fnbTotals = {!! json_encode($fnbTotals) !!};
+
+    // Motor Chart
     const ctx = document.getElementById('incomeChart').getContext('2d');
     const incomeChart = new Chart(ctx, {
         type: 'line',
@@ -267,6 +385,60 @@
                 easing: 'easeInOutQuart'
             }
         }
+    });
+
+    //  F&B Chart 
+    anychart.onDocumentReady(function () {
+        var data = [];
+        for (var i = 0; i < dates.length; i++) {
+            data.push({
+                x: dates[i],
+                value: fnbIncomes[i],
+                items: fnbTotals[i]
+            });
+        }
+        
+        var chart = anychart.stick();
+        chart.interactivity("by-x");
+        var series = chart.stick(data);
+        
+        series.stroke('#FF8C00', 2);
+        
+        chart.title(false);
+        
+        var xAxis = chart.xAxis();
+        xAxis.title("");
+        xAxis.labels().fontColor('#718096');
+        xAxis.labels().fontSize(11);
+        
+        var yAxis = chart.yAxis();
+        yAxis.title("");
+        yAxis.labels().fontColor('#718096');
+        yAxis.labels().fontSize(11);
+        yAxis.labels().format(function() {
+            return 'Rp' + Math.round(this.value).toLocaleString('id-ID');
+        });
+        
+        var yScale = chart.yScale();
+        yScale.minimum(0);
+        yScale.ticks().interval(5000);
+        
+        chart.tooltip().format(function() {
+            var pendapatan = this.value.toLocaleString('id-ID');
+            var items = this.getData('items') || 0;
+            return 'Pendapatan: Rp ' + pendapatan + '\nProduct Terjual: ' + items + 'pcs';
+        });
+        
+        chart.tooltip().titleFormat('{%x}');
+        chart.tooltip().fontColor('#ffffff');
+        chart.tooltip().background().fill('rgba(0, 0, 0, 0.8)');
+        chart.tooltip().background().stroke('#FF8C00');
+        
+        chart.background().fill('#ffffff');
+        chart.padding(10, 20, 10, 10);
+    
+        chart.container("fnbChart");
+        chart.draw();
     });
 
     // Animasi saat load

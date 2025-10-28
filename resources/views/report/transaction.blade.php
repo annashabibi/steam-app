@@ -20,15 +20,16 @@
     {{-- tabel tampil data --}}
     <div class="table-responsive">
         <table class="table table-bordered table-striped table-hover" style="width:100%">
-            <thead>
-                <th class="text-center">No.</th>
-                <th class="text-center">Date</th>
-                <th class="text-center">Karyawan</th>
-                <th class="text-center">Motor</th>
-                <th class="text-center">Harga</th>
-                <th class="text-center">Pembayaran</th>
-                <th class="text-center">Tip</th>
-                <th class="text-center">Total</th>
+            <thead class="text-center">
+                <th>No.</th>
+                <th>Date</th>
+                <th>Karyawan</th>
+                <th>Motor</th>
+                <th>Harga</th>
+                <th>F&B</th>
+                <th>Pembayaran</th>
+                <th>Tip</th>
+                <th>Total</th>
             </thead>
             <tbody>
             @php
@@ -40,8 +41,30 @@
                     <td width="30">{{ $no++ }}</td>
                     <td width="100">{{ date('F   j, Y', strtotime($transaction->date)) }}</td>
                     <td width="130">{{ $transaction->karyawan->nama_karyawan }}</td>
-                    <td width="170">{{ $transaction->motor->nama_motor }}</td>
-                    <td width="70" class="text-end">{{ 'Rp ' . number_format($transaction->motor->harga, 0, '', '.') }}</td>
+                    <td width="100">{{ $transaction->motor->nama_motor }}</td>
+                    <td width="70">{{ 'Rp' . number_format($transaction->motor->harga, 0, '', '.') }}</td>
+                    <td width="120" class="text-start">
+                        @if (!empty($transaction->food_items))
+                            @php
+                                $foodItems = json_decode($transaction->food_items, true);
+                            @endphp
+
+                            @if (!empty($foodItems))
+                                <ul class="list-unstyled mb-0">
+                                    @foreach ($foodItems as $item)
+                                        <li>
+                                            {{ $item['nama_produk'] }} (x{{ $item['qty'] }})<br>
+                                            Rp{{ number_format($item['qty'] * $item['harga'], 0, ',', '.') }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                -
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
                     <td width="50">
                          @if ($transaction->payment_method === 'midtrans')
                             {{ ucfirst($transaction->midtrans_payment_type ?? 'Midtrans') }}
@@ -51,13 +74,13 @@
                             {{ ucfirst($transaction->payment_method ?? '-') }}
                         @endif
                     </td>
-                    <td width="50" class="text-center">{{ number_format($transaction->tip, 0, '', '.') }}</td>
-                    <td width="80" class="text-end">{{ 'Rp ' . number_format($transaction->motor->harga + $transaction->tip, 0, '', '.') }}</td>
+                    <td width="50" class="text-center">{{'Rp'. number_format($transaction->tip, 0, '', '.') }}</td>
+                    <td width="80" class="text-center">{{ 'Rp'. number_format($transaction->total, 0, '', '.') }}</td>
                 </tr>
             @empty
                 {{-- jika data tidak ada, tampilkan pesan data tidak tersedia --}}
                 <tr>
-                    <td colspan="8">
+                    <td colspan="9">
                         <div class="d-flex justify-content-center align-items-center">
                             <i class="ti ti-info-circle fs-5 me-2"></i>
                             <div>No data available.</div>
@@ -68,9 +91,9 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="7" class="text-end fw-bold">Total Keseluruhan:</td>
+                    <td colspan="8" class="text-end fw-bold">Total Keseluruhan</td>
                     <td class="text-end fw-bold">
-                        {{ isset($totalKeseluruhan) ? 'Rp ' . number_format($totalKeseluruhan, 0, '', '.') : 'Rp 0' }}
+                        {{ isset($totalKeseluruhan) && isset($totalFnbTransaksi) ? 'Rp' . number_format($totalKeseluruhan + $totalFnbTransaksi, 0, '', '.') : 'Rp 0' }}
                     </td>
                 </tr>
             </tfoot>

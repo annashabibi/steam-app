@@ -22,10 +22,7 @@ class TransactionController extends Controller
 {
     $pagination = 10;
     $today = Carbon::today();
-    // test tanggal
-    // $today =  Carbon::parse('2025-08-14');
-
-    // Base query
+    
     $query = Transaction::select('id', 'date', 'tip', 'food_items', 'total', 'payment_method', 'payment_status', 'qr_url', 'qr_string', 'expiry_time', 'midtrans_payment_type', 'karyawan_id', 'motor_id')
         ->with([
             'karyawan:id,nama_karyawan',
@@ -52,28 +49,44 @@ class TransactionController extends Controller
         // Ambil data paginated untuk tampilan
         $transactions = $query->orderBy('date', 'asc')->paginate($pagination)->withQueryString();
 
-
         $totalKeseluruhan = Transaction::whereDate('date', $today)
-    ->whereNotIn('payment_status', ['pending', 'expired'])
-    ->with('motor')
-    ->get()
-    ->sum(function ($trx) {
-        $hargaMotor = $trx->motor->harga ?? 0;
-        $tip = $trx->tip ?? 0;
-        $foodTotal = 0;
+        ->whereNotIn('payment_status', ['pending', 'expired'])
+        ->with('motor')
+        ->get()
+        ->sum(function ($trx) {
+            $hargaMotor = $trx->motor->harga ?? 0;
+            $tip = $trx->tip ?? 0;
+            $foodTotal = 0;
 
-        if (!empty($trx->food_items) && is_array($trx->food_items)) {
-            foreach ($trx->food_items as $food) {
-                $foodTotal += ($food['harga'] ?? 0) * ($food['qty'] ?? 1);
+            if (!empty($trx->food_items) && is_array($trx->food_items)) {
+                foreach ($trx->food_items as $food) {
+                    $foodTotal += ($food['harga'] ?? 0) * ($food['qty'] ?? 1);
+                }
             }
-        }
 
-        return $hargaMotor + $tip + $foodTotal;
-    });
+            return $hargaMotor + $tip + $foodTotal;
+        });
 
+        $totalTransaksi = Transaction::whereDate('date', $today)
+        ->whereNotIn('payment_status', ['pending', 'expired'])
+        ->with('motor')
+        ->get()
+        ->sum(function($trx) {
+            $hargaMotor = $trx->motor->harga ?? 0;
+            $tip = $trx->tip ?? 0;
+            $foodTotal = 0;
+            $foodItems = is_string($trx->food_items) ? json_decode($trx->food_items, true) : $trx->food_items;
+            if (!empty($foodItems) && is_array($foodItems)) {
+                foreach ($foodItems as $item) {
+                    $foodTotal += ($item['harga'] ?? 0) * ($item['qty'] ?? 1);
+                }
+            }
+            return $hargaMotor + $tip + $foodTotal;
+        });
 
-            return view('transactions.index', compact('transactions', 'totalKeseluruhan', 'today'))->with('i', ($request->input('page', 1) - 1) * $pagination);
-}
+    return view('transactions.index', compact('transactions', 'totalKeseluruhan', 'totalTransaksi', 'today'))
+        ->with('i', ($request->input('page', 1) - 1) * $pagination);
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -208,11 +221,6 @@ class TransactionController extends Controller
         'transaction' => $transaction,
         'isPaid'      => $isPaid,
     ]);
-}
-    public function success()
-{
-    return redirect()->route('transactions.index')
-                     ->with('success', 'Pembayaran berhasil!');
 }
 
 }

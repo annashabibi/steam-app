@@ -38,7 +38,17 @@ class ReportController extends Controller
             ($trx->motor->harga ?? 0) + ($trx->tip ?? 0)
         );
 
-        return view('report.index', compact('reportType', 'transactions', 'totalKeseluruhan', 'date'));
+        $totalFnbTransaksi = 0;
+        foreach ($transactions as $trx) {
+            $foodItems = is_string($trx->food_items) ? json_decode($trx->food_items, true) : $trx->food_items;
+            if (!empty($foodItems) && is_array($foodItems)) {
+                foreach ($foodItems as $item) {
+                    $totalFnbTransaksi += ($item['harga'] ?? 0) * ($item['qty'] ?? 0);
+                }
+            }
+        }
+
+        return view('report.index', compact('reportType', 'transactions', 'totalKeseluruhan', 'totalFnbTransaksi', 'date'));
     }
 
     if ($reportType === 'pendapatan') {
@@ -119,11 +129,28 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->sum('total');
 
+        $totalFnbHariItu = 0;
+        $fnbTransactions = Transaction::whereDate('date', $date)
+            ->where('payment_status', 'paid')
+            ->whereNotNull('food_items')
+            ->get();
+
+        foreach ($fnbTransactions as $trx) {
+            $foodItems = is_string($trx->food_items) ? json_decode($trx->food_items, true) : $trx->food_items;
+            if (!empty($foodItems) && is_array($foodItems)) {
+                foreach ($foodItems as $item) {
+                    $totalFnbHariItu += ($item['harga'] ?? 0) * ($item['qty'] ?? 0);
+                }
+            }
+        }
+
+        $totalUangSteamSaja = $totalUangSteamHariItu - $totalFnbHariItu;
+
         // Jumlah semua pengeluaran pada hari itu (kasbon & lainnya)
         $totalPengeluaranHariItu = Pengeluaran::whereDate('date', $date)->sum('jumlah');
 
         // Jumlah bersih hari itu = uang steam - pengeluaran
-        $jumlahBersihHariItu = $totalUangSteamHariItu - $totalPengeluaranHariItu;
+        $jumlahBersihHariItu = $totalUangSteamSaja + $totalFnbHariItu - $totalPengeluaranHariItu;
 
         return view('report.index', compact(
             'reportType',
@@ -136,6 +163,8 @@ class ReportController extends Controller
             'pengeluaranSabun',
             'pengeluaranAir',
             'totalUangSteamHariItu',
+            'totalUangSteamSaja',
+            'totalFnbHariItu',
             'totalPengeluaranHariItu',
             'jumlahBersihHariItu',
             'date'
@@ -145,14 +174,12 @@ class ReportController extends Controller
     return redirect()->back()->with('error', 'Tipe laporan tidak dikenali.');
 }
 
-
-
     /**
      * Cetak laporan berdasarkan tipe.
      */
     public function print($type)
 {
-    $date = \Carbon\Carbon::parse(request('date') ?? Transaction::max('date'));
+    $date = Carbon::parse(request('date') ?? Transaction::max('date'));
 
     $data = [
         'type' => $type,
@@ -169,8 +196,19 @@ class ReportController extends Controller
             ($trx->motor->harga ?? 0) + ($trx->tip ?? 0)
         );
 
+        $totalFnbTransaksi = 0;
+        foreach ($transactions as $trx) {
+            $foodItems = is_string($trx->food_items) ? json_decode($trx->food_items, true) : $trx->food_items;
+            if (!empty($foodItems) && is_array($foodItems)) {
+                foreach ($foodItems as $item) {
+                    $totalFnbTransaksi += ($item['harga'] ?? 0) * ($item['qty'] ?? 0);
+                }
+            }
+        }
+
         $data['transactions'] = $transactions;
         $data['totalKeseluruhan'] = $totalKeseluruhan;
+        $data['totalFnbTransaksi'] = $totalFnbTransaksi;
     }
 
     if ($type === 'pendapatan') {
@@ -249,8 +287,25 @@ class ReportController extends Controller
             ->where('payment_status', 'paid')
             ->sum('total');
 
+        $totalFnbHariItu = 0;
+        $fnbTransactions = Transaction::whereDate('date', $date)
+            ->where('payment_status', 'paid')
+            ->whereNotNull('food_items')
+            ->get();
+
+        foreach ($fnbTransactions as $trx) {
+            $foodItems = is_string($trx->food_items) ? json_decode($trx->food_items, true) : $trx->food_items;
+            if (!empty($foodItems) && is_array($foodItems)) {
+                foreach ($foodItems as $item) {
+                    $totalFnbHariItu += ($item['harga'] ?? 0) * ($item['qty'] ?? 0);
+                }
+            }
+        }
+
+        $totalUangSteamSaja = $totalUangSteamHariItu - $totalFnbHariItu;
+
         $totalPengeluaranHariItu = Pengeluaran::whereDate('date', $date)->sum('jumlah');
-        $jumlahBersihHariItu = $totalUangSteamHariItu - $totalPengeluaranHariItu;
+        $jumlahBersihHariItu = $totalUangSteamSaja + $totalFnbHariItu - $totalPengeluaranHariItu;
 
         $data = array_merge($data, compact(
             'pendapatanKaryawan',
@@ -262,6 +317,8 @@ class ReportController extends Controller
             'pengeluaranSabun',
             'pengeluaranAir',
             'totalUangSteamHariItu',
+            'totalUangSteamSaja',
+            'totalFnbHariItu',
             'totalPengeluaranHariItu',
             'jumlahBersihHariItu'
         ));
@@ -270,6 +327,5 @@ class ReportController extends Controller
     $pdf = Pdf::loadView('report.print', $data)->setPaper('a4', 'landscape');
     return $pdf->download("report_{$type}_{$date}.pdf");
 }
-
 
 }

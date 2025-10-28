@@ -88,6 +88,7 @@
                 <thead class="table-secondary">
                     <tr>
                         <th>Total Uang Steam</th>
+                        <th>Total F&B</th>
                         <th>Uang Makan</th>
                         <th>Token</th>
                         <th>Uang Sampah</th>
@@ -98,7 +99,8 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Rp{{ number_format($totalUangSteamHariItu, 0, ',', '.') }}</td>
+                        <td>Rp{{ number_format($totalUangSteamSaja, 0, ',', '.') }}</td>
+                        <td>Rp{{ number_format($totalFnbHariItu, 0, ',', '.') }}</td>
                         <td>Rp{{ number_format($pengeluaranMakan, 0, ',', '.') }}</td>
                         <td>Rp{{ number_format($pengeluaranToken, 0, ',', '.') }}</td>
                         <td>Rp{{ number_format($pengeluaranSampah, 0, ',', '.') }}</td>
@@ -107,12 +109,12 @@
                         <td class="text-danger fw-bold">Rp{{ number_format($totalPengeluaranHariItu, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-bold text-dark">Jumlah</td>
+                        <td colspan="7" class="text-end fw-bold text-dark">Jumlah</td>
                         <td class="fw-bold text-dark">Rp{{ number_format($jumlahBersihHariItu, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td colspan="6" class="text-end fw-bold">Total Pendapatan Bersih</td>
-                        <td class="text-success fw-bold">Rp{{ number_format($totalPendapatanPemilik - ($pengeluaranToken + $pengeluaranSampah + $pengeluaranAir + $pengeluaranSabun + $pengeluaranMakan), 0, ',', '.') }}</td>
+                        <td colspan="7" class="text-end fw-bold">Total Pendapatan Bersih</td>
+                        <td class="text-success fw-bold">Rp{{ number_format(($totalPendapatanPemilik - ($pengeluaranToken + $pengeluaranSampah + $pengeluaranAir + $pengeluaranSabun + $pengeluaranMakan)) + $totalFnbHariItu, 0, ',', '.') }}</td>
                     </tr>
                 </tbody>
             </table>
