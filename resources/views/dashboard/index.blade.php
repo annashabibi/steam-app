@@ -269,7 +269,7 @@
                     {{-- jika data ada, tampilkan data --}}
                     <tr class="text-center">
                         <td width="50" class="text-center">
-                            <img src={{ $transaction->$motor->image }} class="img-thumbnail rounded-4" width="80" alt="Images">
+                            <img src="{{ $transaction->$motor->image }}" class="img-thumbnail rounded-4" width="80" alt="Images">
                         </td>
                         <td width="200">{{ $transaction->motor->nama_motor }}</td>
                         <td width="100" class="text-end-center">{{ 'Rp ' . number_format($transaction->motor->harga, 0, '', '.') }}</td> 
