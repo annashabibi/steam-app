@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->json('food_items')->nullable()->after('qr_string');
+            if (!Schema::hasColumn('transactions', 'food_items')) {
+                $table->json('food_items')->nullable()->after('qr_string');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn('food_items');
+            if (Schema::hasColumn('transactions', 'food_items')) {
+                $table->dropColumn('food_items');
+            }
         });
     }
 };
