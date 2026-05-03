@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('food', function (Blueprint $table) {
+        Schema::createIfNotExists('food', function (Blueprint $table) {
             $table->id();
             $table->string('nama_produk')->unique();
             $table->string('category');
