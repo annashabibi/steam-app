@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('food', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_produk')->unique();
-            $table->string('category');
-            $table->string('image')->nullable();
-            $table->integer('qty')->default(0)->unsigned();
-            $table->bigInteger('harga')->unsigned();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('food')) {
+            Schema::create('food', function (Blueprint $table) {
+                $table->id();
+                $table->string('nama_produk')->unique();
+                $table->string('category');
+                $table->string('image')->nullable();
+                $table->integer('qty')->default(0)->unsigned();
+                $table->bigInteger('harga')->unsigned();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
