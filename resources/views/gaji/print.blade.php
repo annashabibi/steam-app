@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Gaji Steam Guegbyuur - {{ $karyawan->nama_karyawan }}</title>
+    {{-- <title>Laporan Gaji Steam Guegbyuur - {{ $karyawan->nama_karyawan }}</title> --}}
+    <title>Laporan Gaji Day Steam - {{ $karyawan->nama_karyawan }}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -14,7 +15,8 @@
     </style>
 </head>
 <body>
-    <h2 style="margin-bottom: 5px;">Laporan Gaji Steam Guegbyuur - {{ $karyawan->nama_karyawan }}</h2>
+    {{-- <h2 style="margin-bottom: 5px;">Laporan Gaji Steam Guegbyuur - {{ $karyawan->nama_karyawan }}</h2> --}}
+    <h2 style="margin-bottom: 5px;">Laporan Gaji Day Steam - {{ $karyawan->nama_karyawan }}</h2>
     <p>Periode: {{ \Carbon\Carbon::now()->startOfMonth()->translatedFormat('j F Y') }} - {{ \Carbon\Carbon::now()->endOfMonth()->translatedFormat('j F Y') }} </p>
 
     <table>

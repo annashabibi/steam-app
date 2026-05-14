@@ -6,7 +6,8 @@
     <div class="bg-white rounded-2 shadow-sm p-4 mb-5">
         <div class="row align-items-center g-5">
             <div class="col-lg-3">
-                <img src="{{ asset('images/logo.png') }}" class="img-fluid opacity-85" alt="images" loading="lazy">
+                {{-- <img src="{{ asset('images/logo.png') }}" class="img-fluid opacity-85" alt="images" loading="lazy"> --}}
+                <h1 class="fw-bold text-primary display-4">Day Steam</h1>
             </div>
             <div class="col-lg-9">
                 <h4 class="text-primary mb-2">

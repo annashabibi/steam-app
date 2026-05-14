@@ -5,11 +5,13 @@
     {{-- Required meta tags --}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Aplikasi POS Steam Gue Gbyuur Laravel 11">
+    {{-- <meta name="description" content="Aplikasi POS Steam Gue Gbyuur Laravel 11"> --}}
+    <meta name="description" content="Aplikasi POS Day Steam Laravel 11">
     <meta name="author" content="Annas Habibi">
 
     {{-- Title --}}
-    <title>Aplikasi POS Steam Gue Gbyuur</title>
+    {{-- <title>Aplikasi POS Steam Gue Gbyuur</title> --}}
+    <title>Aplikasi POS Day Steam</title>
 
     {{-- Favicon icon --}}
     {{-- <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon"> --}}
