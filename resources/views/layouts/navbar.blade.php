@@ -3,8 +3,7 @@
     <div class="container d-flex align-items-center justify-content-between">
         {{-- Brand --}}
         <a class="navbar-brand text-white" href="{{ route('dashboard') }}">
-            {{-- <span class=" brand-logo-text fs-4">Steam Gue Gbyuur</span> --}}
-            <span class=" brand-logo-text fs-4">Day Steam</span>
+            <span class=" brand-logo-text fs-4">Steam Gue Gbyuur</span>
         </a>
 
         {{-- Tombol Hamburger --}}
