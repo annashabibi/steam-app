@@ -120,10 +120,7 @@
             Swal.fire({
                 title: 'Selamat Datang!',
                 text: '{{ session('login') }}',
-                // Logo Day Steam (logo.jpg):
-                imageUrl: '{{ asset('images/logo.jpg') }}',
-                // Logo Guegbyuur lama (login.png):
-                // imageUrl: '/images/login.png',
+                imageUrl: '/images/login.png',
                 imageWidth: 200,
                 imageHeight: 200,
                 imageAlt: 'Login',

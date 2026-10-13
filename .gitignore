@@ -4,6 +4,7 @@
 /public/hot
 # /public/storage
 /storage/*.key
+backup-new.sql
 /vendor
 .env
 .env.backup
