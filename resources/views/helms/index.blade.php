@@ -131,7 +131,8 @@
                                             <div class="card border-0 rounded-0" id="transaksiHelmContent{{ $helm->id }}">
                                                 <div class="card-body text-center p-4">
                                                     {{-- Header --}}
-                                                    <h3 class="brand">Gue Gbyuur</h3>
+                                                    {{-- <h3 class="brand">Gue Gbyuur</h3> --}}
+                                                    <h3 class="brand">Day Steam</h3>
                                                     <h6 class="text-muted mb-1">Steam Motor & Cuci Helm</h6>
                                                     <p class="text-muted small mb-3">Jl. Abdul Ghani 2 Perumahan Palkostrad, Kalibaru, Kec. Cilodong, Kota Depok</p>
 

@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Laporan Steam Guegbyuur - {{ ucfirst($type) }} {{ $date->translatedFormat('l, j F Y') }}</title>
+    {{-- <title>Laporan Steam Guegbyuur - {{ ucfirst($type) }} {{ $date->translatedFormat('l, j F Y') }}</title> --}}
+    <title>Laporan Day Steam - {{ ucfirst($type) }} {{ $date->translatedFormat('l, j F Y') }}</title>
     <style type="text/css">
         body {
             font-family: sans-serif;
@@ -38,7 +39,8 @@
 </head>
 <body>
     <div style="text-align: center">
-        <h3>Laporan {{ ucfirst($type) }} Steam Guegbyuur {{ $date->isoFormat('dddd, D MMMM Y') }}</h3>
+        {{-- <h3>Laporan {{ ucfirst($type) }} Steam Guegbyuur {{ $date->isoFormat('dddd, D MMMM Y') }}</h3> --}}
+        <h3>Laporan {{ ucfirst($type) }} Day Steam {{ $date->isoFormat('dddd, D MMMM Y') }}</h3>
     </div>
 
     <hr style="margin-bottom:20px">

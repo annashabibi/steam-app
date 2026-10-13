@@ -125,7 +125,8 @@
                                     <div class="card border-0 rounded-0" id="transaksiContent{{ $transaction->id }}">
                                         <div class="card-body text-center p-4">
                                             {{-- Logo --}}
-                                            <h3 class="brand">Gue Gbyuur</h3>
+                                            {{-- <h3 class="brand">Gue Gbyuur</h3> --}}
+                                            <h3 class="brand">Day Steam</h3>
                                             {{-- <img src="{{ asset('images/logo2.png') }}" class="img-fluid mb-3" alt="Logo" style="max-width: 120px;"> --}}
                                                     
                                             {{-- Header Info --}}

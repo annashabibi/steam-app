@@ -6,7 +6,11 @@
     <div class="bg-white rounded-2 shadow-sm p-4 mb-5">
         <div class="row align-items-center g-5">
             <div class="col-lg-3">
+                {{-- Logo Day Steam --}}
+                <img src="{{ asset('images/logo.jpg') }}" class="img-fluid opacity-85" alt="Logo Day Steam" loading="lazy">
+                {{-- Logo Guegbyuur (lama):
                 <img src="{{ asset('images/logo.png') }}" class="img-fluid opacity-85" alt="images" loading="lazy">
+                --}}
             </div>
             <div class="col-lg-9">
                 <h4 class="text-primary mb-2">
